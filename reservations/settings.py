@@ -77,10 +77,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
         'NAME': 'reservations',
-	'USER'; 'root',
-	'PASSWORD':",
+	'USER': 'root',
+	'PASSWORD':'root',
 	'HOST':'127.0.0.1',
-	'PORT':33O6'
+	'PORT':'3306',
     }
 }
 
