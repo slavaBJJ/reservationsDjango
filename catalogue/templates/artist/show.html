@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{% extends 'layouts/base.html' %} {% block title %}Fiche d’un artiste{% endblock %}
+{% block content %}
+<h2>
+    {{ artist.firstname }} {{ artist.lastname }}
+</h2>
+<nav>
+    <a href="{% url 'catalogue:artist-index' %}">Retour à l'index</a>
+</nav>
+{% endblock %}
+</body>
+</html>
