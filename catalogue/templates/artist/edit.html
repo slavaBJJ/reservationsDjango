@@ -2,7 +2,7 @@
 {% block title %} Modifier un artiste {% endblock %}
 {% block content %}
 <h2>Modifier un artiste</h2>
-<from action ="{% url 'catalogue:artist-edit' artist.id %}" method="post">
+<form action ="{% url 'catalogue:artist-edit' artist.id %}" method="post">
     {%csrf_token%}
     <input type="hidden" name="_method" value="PUT">
 
@@ -10,6 +10,6 @@
 
     <button>Modifier</button>
     <a href = "{ % url 'catalogue:artist-show' artist.id %}">Annuler</a>
-</from>
+</form>
 <nav><a href="{% url 'catalogue:artist-index' %}">Retour à l'index</a></nav>
 {% endblock %}

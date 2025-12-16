@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-{% extends 'layouts/base.html' %} {% block title %}Liste des artistes{% endblock %} {% block content %}
+{% extends 'layouts/base.html' %}
+
+{% block title %}Liste des artistes {% endblock %}
+
+{% block content %}
 <h2>{{ title }}</h2>
 <ul>
     <li><a href="{% url 'catalogue:artist-create'%}">Ajouter</a></li>
@@ -19,8 +16,9 @@
     </thead>
     <tbody> {% for artist in artists %}
     <tr>
-        <td>{{ artist.firstname }}</td>
-        <td> <a href="{% url 'catalogue:artist-show' artist.id %}">{{ artist.lastname }}</a> </td>
+
+        <td> <a href="{% url 'catalogue:artist-show' artist.id %}">{{ artist.firstname }} {{ artist.lastname }}</a> </td>
+        <td>{{artist.id}}</td>
     </tr>
     {% empty %}
     <tr> <td colspan="2">Sorry, no artist in the database.</td> </tr>
