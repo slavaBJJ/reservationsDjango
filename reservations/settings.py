@@ -132,3 +132,7 @@ LOGIN_URL = '/accounts/login'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL= 'home'
+
+# Email configuration
+#https://docs.djangoproject.com/fr/5.2/topics/email/#smtp-backends
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
