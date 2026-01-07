@@ -4,6 +4,7 @@ from django.views.generic import CreateView
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 class UserSignUpView(UserPassesTestMixin, CreateView):
     form_class = UserCreationForm
@@ -16,3 +17,12 @@ class UserSignUpView(UserPassesTestMixin, CreateView):
     def handle_no_permission(self):
         messages.error(self.request, "Vous êtes déjà inscrit!")
         return redirect('home')
+
+@login_required
+def profile(request):
+    languages = {
+        "fr":"Francais",
+        "en":"English",
+        "nl":"Neederlands"
+    }
+    return render(request,'user/profile.html',{"user_language":languages[request.user.usermeta.language],})
