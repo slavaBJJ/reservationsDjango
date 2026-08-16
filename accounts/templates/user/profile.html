@@ -8,6 +8,7 @@
         <p>Langue : {{user_language}}</p>
     </div>
     <ul>
+<!--        <li><a href="{% url 'accountsuser-update' request.user.id%}">Modifier</a></li>-->
         <li><a href="{% url 'password_change' %}">Modifier le mot de passe</a></li>
     </ul>
 {% endblock content %}

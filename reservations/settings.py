@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'catalogue',
     'accounts',
+    'rest_framework',
+   # 'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [
@@ -78,12 +80,12 @@ WSGI_APPLICATION = 'reservations.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mysql.connector.django',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'reservations',
-	'USER': 'root',
-	'PASSWORD':'root',
+	'USER': 'slava',
+	'PASSWORD':'slava',
 	'HOST':'127.0.0.1',
-	'PORT':'3306',
+	'PORT':'5432',
     }
 }
 
@@ -137,3 +139,29 @@ LOGOUT_REDIRECT_URL= 'home'
 # Email configuration
 #https://docs.djangoproject.com/fr/5.2/topics/email/#smtp-backends
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+'''REST_FRAMEWORK={
+    'DEFAULT_AUTHENTIFICATION_CLASSES' : [
+        # Pour l'authentification basée sur la session
+        'rest_framework.authentication.SessionAuthentification',
+        #Pour l'authentification de base (utile pour Postman/cURL)
+        'rest_framework.authentication.BasicAuthentication',
+        #Pour l'authentification via TOKEN
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSSES':[
+        #Exige l'authentification pour toutes les requêtes
+        'rest_framework.permission.IsAuthenticated',
+    ],
+}
+'''
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication', # Priorité au Token
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

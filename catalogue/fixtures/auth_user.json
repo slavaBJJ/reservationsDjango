@@ -3,8 +3,8 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-        "password": "pbkdf2_sha256$1000000$7wdaPsCgcUKcUh8vgZrKwo$FJszReVWQnCZgujhfctGFwDAD1sFuMNVVx/bM55Ao9Y=",
-        "last_login": "2025-12-17T18:40:50Z",
+        "password": "pbkdf2_sha256$1000000$59aMmKFMbjFzy3mqr79J33$iVuKFaYpS83TS7Tz7jxMcCfFRDdgHZTaM5Snr11W+5E=",
+        "last_login": "2026-02-02T15:14:32.155Z",
         "is_superuser": true,
         "username": "admin",
         "first_name": "",
@@ -12,7 +12,7 @@
         "email": "admin@admin.com",
         "is_staff": true,
         "is_active": true,
-        "date_joined": "2025-12-17T18:40:06Z",
+        "date_joined": "2026-02-02T15:14:23.483Z",
         "groups": [],
         "user_permissions": []
     }
@@ -21,18 +21,18 @@
     "model": "auth.user",
     "pk": 2,
     "fields": {
-        "password": "pbkdf2_sha256$1000000$iwTGSSvaLt5tOH66a9EQWZ$RYxmYHsl572vvusLaWr+XDDUO7DJSnTP/zqvWvK0WcM=",
+        "password": "pbkdf2_sha256$1000000$THhqSrRdtdSMSX1on8MyFi$cNZ7vR+sef+acPDahKUrfkhyd+pmXnqO5yoykviAz0E=",
         "last_login": null,
         "is_superuser": false,
         "username": "anna",
-        "first_name": "Anne",
+        "first_name": "Anna",
         "last_name": "Lyse",
-        "email": "anne.lyse@sull.com",
+        "email": "anna.lyse@sull.com",
         "is_staff": false,
         "is_active": true,
-        "date_joined": "2025-12-17T22:20:53Z",
+        "date_joined": "2026-02-04T11:32:04Z",
         "groups": [
-            2
+            1
         ],
         "user_permissions": []
     }
@@ -41,7 +41,7 @@
     "model": "auth.user",
     "pk": 3,
     "fields": {
-        "password": "pbkdf2_sha256$1000000$POEKEPVWq2j5mYX5nkSMPP$Exg4Ivm2/EAFMTirTFXE1Loxk5oLOYZPBT3+BUuyuzQ=",
+        "password": "pbkdf2_sha256$1000000$QLJ9Wp6bYWgIifm57xjG8k$jUFff9SKCFgi6GqiPyGhnFPxMmkjX/yfrDOkTjPj6Ro=",
         "last_login": null,
         "is_superuser": false,
         "username": "bob",
@@ -50,9 +50,9 @@
         "email": "bob@sull.com",
         "is_staff": false,
         "is_active": true,
-        "date_joined": "2025-12-17T22:22:45Z",
+        "date_joined": "2026-02-04T11:33:47Z",
         "groups": [
-            2
+            1
         ],
         "user_permissions": []
     }

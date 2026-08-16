@@ -1,0 +1,9 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ locality.postal_code }} {{ locality.locality|title }}</h1>
+
+    <nav><a href="{% url 'catalogue:locality-index' %}">Retour à l'index</a></nav>
+{% endblock %}
