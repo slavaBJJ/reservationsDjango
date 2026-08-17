@@ -1,6 +1,9 @@
 from django.db import models
 from .locality import *
 
+class LocationManager(models.Manager):
+    def get_by_natural_key(self, slug, website):
+        return self.get(slug=slug, website=website)
 
 # Create your models here.
 class Location(models.Model):
@@ -12,8 +15,20 @@ class Location(models.Model):
     website = models.CharField(max_length=255, null=True)
     phone = models.CharField(max_length=30, null=True)
 
+    objects = LocationManager()
+
     def __str__(self):
         return self.designation
 
     class Meta:
         db_table = "locations"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slug", "website"],
+                name="unique_slug_website",
+            ),
+        ]
+
+    def natural_key(self):
+        return (self.slug, self.website)
+
