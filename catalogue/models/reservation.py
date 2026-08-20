@@ -8,10 +8,14 @@ class Reservation(models.Model):
     status = models.CharField(max_length=60)
     user = models.ForeignKey(User, on_delete=models.RESTRICT,
                              null=False, related_name='reservations')
+    representations = models.ManyToManyField(
+        'Representation',
+        through='RepresentationReservation',
+        related_name='reservations',
+    )
 
     def __str__(self):
         return f"{self.user} - {self.booking_date}"
 
     class Meta:
         db_table = "reservations"
-
