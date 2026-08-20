@@ -11,7 +11,7 @@
     "model": "catalogue.artist",
     "pk": 2,
     "fields": {
-      "firstname": "Phhilippe",
+      "firstname": "Philippe",
       "lastname": "Laurent"
     }
   },

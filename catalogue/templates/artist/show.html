@@ -6,6 +6,16 @@
 <h2>
     {{ artist.firstname }} {{ artist.lastname }}
 </h2>
+
+<h2>Liste des types</h2>
+<ul>
+    {% for artist_type in artist.a_artistTypes.all %}
+        <li>{{ artist_type.type.type }}</li>
+    {% empty %}
+        <li>Aucun type renseigné.</li>
+    {% endfor %}
+</ul>
+
 <div><a href ="{% url 'catalogue:artist-edit' artist.id%}">Modifier</a></div>
 
 <form method="post" action="{% url 'catalogue:artist-delete' artist.id %}"
@@ -19,5 +29,3 @@
 
 <nav> <a href="{% url 'catalogue:artist-index' %}">Retour à l'index</a> </nav>
 {% endblock %}
-</body>
-</html>

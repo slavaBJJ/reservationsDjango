@@ -1,0 +1,21 @@
+[
+  {"model": "catalogue.artisttype", "pk": 1, "fields": {"artist": ["Daniel", "Marcelin"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 2, "fields": {"artist": ["Philippe", "Laurent"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 3, "fields": {"artist": ["Daniel", "Marcelin"], "type": ["scénographe"]}},
+  {"model": "catalogue.artisttype", "pk": 4, "fields": {"artist": ["Philippe", "Laurent"], "type": ["scénographe"]}},
+  {"model": "catalogue.artisttype", "pk": 5, "fields": {"artist": ["Daniel", "Marcelin"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 6, "fields": {"artist": ["Marius", "Von Mayenburg"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 7, "fields": {"artist": ["Olivier", "Boudon"], "type": ["scénographe"]}},
+  {"model": "catalogue.artisttype", "pk": 8, "fields": {"artist": ["Anne Marie", "Loop"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 9, "fields": {"artist": ["Pietro", "Varasso"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 10, "fields": {"artist": ["Laurent", "Caron"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 11, "fields": {"artist": ["Élena", "Perez"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 12, "fields": {"artist": ["Guillaume", "Alexandre"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 13, "fields": {"artist": ["Claude", "Semal"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 14, "fields": {"artist": ["Laurence", "Warin"], "type": ["scénographe"]}},
+  {"model": "catalogue.artisttype", "pk": 15, "fields": {"artist": ["Claude", "Semal"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 16, "fields": {"artist": ["Pierre", "Wayburn"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 17, "fields": {"artist": ["Gwendoline", "Gauthier"], "type": ["auteur"]}},
+  {"model": "catalogue.artisttype", "pk": 18, "fields": {"artist": ["Pierre", "Wayburn"], "type": ["comédien"]}},
+  {"model": "catalogue.artisttype", "pk": 19, "fields": {"artist": ["Gwendoline", "Gauthier"], "type": ["comédien"]}}
+]

@@ -1,0 +1,14 @@
+[
+  {"model": "catalogue.show_prices", "pk": 1, "fields": {"show": ["ayiti", 2010], "price": ["children", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 2, "fields": {"show": ["ayiti", 2010], "price": ["senior", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 3, "fields": {"show": ["ayiti", 2010], "price": ["article 27", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 4, "fields": {"show": ["ayiti", 2010], "price": ["VIP", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 5, "fields": {"show": ["cible-mouvante", 2012], "price": ["children", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 6, "fields": {"show": ["cible-mouvante", 2012], "price": ["senior", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 7, "fields": {"show": ["cible-mouvante", 2012], "price": ["article 27", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 8, "fields": {"show": ["cible-mouvante", 2012], "price": ["VIP", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 9, "fields": {"show": ["manneke", 2011], "price": ["children", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 10, "fields": {"show": ["manneke", 2011], "price": ["senior", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 11, "fields": {"show": ["manneke", 2011], "price": ["article 27", "2024-01-01", "2024-12-31"]}},
+  {"model": "catalogue.show_prices", "pk": 12, "fields": {"show": ["manneke", 2011], "price": ["VIP", "2024-01-01", "2024-12-31"]}}
+]

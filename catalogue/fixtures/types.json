@@ -10,7 +10,7 @@
     "model": "catalogue.type",
     "pk": 2,
     "fields": {
-      "type": "scenographe"
+      "type": "scénographe"
     }
   },
   {"model":"catalogue.type",

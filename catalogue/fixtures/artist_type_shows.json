@@ -1,0 +1,26 @@
+[
+  {
+    "model": "catalogue.artisttypeshow",
+    "pk": 1,
+    "fields": {
+      "show": ["ayiti", 2010],
+      "artist_type": 1
+    }
+  },
+  {
+    "model": "catalogue.artisttypeshow",
+    "pk": 2,
+    "fields": {
+      "show": ["ayiti", 2010],
+      "artist_type": 4
+    }
+  },
+  {
+    "model": "catalogue.artisttypeshow",
+    "pk": 3,
+    "fields": {
+      "show": ["ayiti", 2010],
+      "artist_type": 5
+    }
+  }
+]
