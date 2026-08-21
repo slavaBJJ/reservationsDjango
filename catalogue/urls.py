@@ -3,6 +3,7 @@
 from django.urls import path
 from . import views
 from api.catalogue.views import ArtistListCreateView, ArtistRetrieveUpdateDestroyView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 app_name='catalogue'
 
@@ -30,6 +31,8 @@ urlpatterns = [
         views.representation.show,
         name='representation-show',
     ),
+    path('api/token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
 
 
 ]
