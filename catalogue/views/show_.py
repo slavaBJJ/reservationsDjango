@@ -1,16 +1,54 @@
+from django.core.paginator import Paginator
+from django.db.models import Min, Q
 from django.http import Http404
 from django.shortcuts import render
 
-from catalogue.models import Show
+from catalogue.models import Location, Show
 
 
 def index(request):
-    shows = Show.objects.all()
+    search = request.GET.get('q', '').strip()
+    location = request.GET.get('location', '')
+    bookable = request.GET.get('bookable', '')
+    sort = request.GET.get('sort', 'title')
+
+    shows = Show.objects.select_related('location').annotate(
+        min_price=Min('prices__price'),
+    )
+
+    if search:
+        shows = shows.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search)
+        )
+
+    if location.isdigit():
+        shows = shows.filter(location_id=location)
+
+    if bookable in {'0', '1'}:
+        shows = shows.filter(bookable=(bookable == '1'))
+
+    sort_fields = {
+        'title': ('title', 'pk'),
+        'location': ('location__designation', 'title', 'pk'),
+        'bookable': ('bookable', 'title', 'pk'),
+        'price': ('min_price', 'title', 'pk'),
+    }
+    if sort not in sort_fields:
+        sort = 'title'
+
+    shows = shows.order_by(*sort_fields[sort])
+    page = Paginator(shows, 10).get_page(request.GET.get('page'))
     title = 'Liste des spectacles'
 
     return render(request, 'show/index.html', {
-        'shows': shows,
+        'shows': page,
         'title': title,
+        'locations': Location.objects.order_by('designation'),
+        'search': search,
+        'selected_location': location,
+        'selected_bookable': bookable,
+        'selected_sort': sort,
     })
 
 
