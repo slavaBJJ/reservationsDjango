@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <p><strong>Créée le :</strong> {{ reservation.booking_date|date:'d/m/Y H:i' }}</p>
+    <p><strong>Statut :</strong> {{ reservation.status }}</p>
+
+    <h2>Places réservées</h2>
+    <ul>
+        {% for line in reservation.representation_reservations.all %}
+            <li>
+                <strong>{{ line.representation.show.title }}</strong><br>
+                {{ line.representation.schedule|date:'d/m/Y H:i' }}<br>
+                {% if line.representation.location %}
+                    {{ line.representation.location.designation }}<br>
+                {% endif %}
+                {{ line.quantity }} place{{ line.quantity|pluralize }}
+                à {{ line.price }} €
+            </li>
+        {% empty %}
+            <li>Aucune place dans cette réservation.</li>
+        {% endfor %}
+    </ul>
+
+    <nav>
+        <a href="{% url 'catalogue:reservation-index' %}">Retour à mes réservations</a>
+    </nav>
+{% endblock %}

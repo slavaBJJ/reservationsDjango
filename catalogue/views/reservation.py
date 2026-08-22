@@ -13,6 +13,35 @@ from catalogue.models import (
 
 
 @login_required
+def index(request):
+    reservations = request.user.reservations.prefetch_related(
+        'representation_reservations__representation__show',
+        'representation_reservations__representation__location',
+    ).order_by('-booking_date', '-pk')
+
+    return render(request, 'reservation/index.html', {
+        'reservations': reservations,
+        'title': 'Mes réservations',
+    })
+
+
+@login_required
+def show(request, reservation_id):
+    reservation = get_object_or_404(
+        request.user.reservations.prefetch_related(
+            'representation_reservations__representation__show',
+            'representation_reservations__representation__location',
+        ),
+        pk=reservation_id,
+    )
+
+    return render(request, 'reservation/show.html', {
+        'reservation': reservation,
+        'title': f'Réservation n°{reservation.pk}',
+    })
+
+
+@login_required
 def create(request, representation_id):
     representation = get_object_or_404(
         Representation.objects.select_related('show', 'location'),
