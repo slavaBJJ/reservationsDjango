@@ -59,8 +59,16 @@ def show(request, show_id):
         raise Http404('Spectacle inexistant')
 
     title = "Fiche d'un spectacle"
+    reviews = show.reviews.filter(validated=True).select_related('user').order_by(
+        '-created_at',
+    )
+    user_review = None
+    if request.user.is_authenticated:
+        user_review = show.reviews.filter(user=request.user).first()
 
     return render(request, 'show/show.html', {
         'show': show,
         'title': title,
+        'reviews': reviews,
+        'user_review': user_review,
     })
