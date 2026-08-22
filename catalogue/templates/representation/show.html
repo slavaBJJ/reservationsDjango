@@ -17,6 +17,20 @@
                 <em>à déterminer</em>
             {% endif %}
         </p>
+
+        {% if can_reserve %}
+            <p>
+                <a href="{% url 'catalogue:reservation-create' representation.id %}">
+                    Réserver des places
+                </a>
+            </p>
+        {% elif not representation.show.bookable %}
+            <p><em>Ce spectacle n'est pas réservable.</em></p>
+        {% elif not representation.show.prices.exists %}
+            <p><em>Aucun tarif n'est disponible.</em></p>
+        {% else %}
+            <p><em>Cette représentation est passée.</em></p>
+        {% endif %}
     </article>
 
     <nav>

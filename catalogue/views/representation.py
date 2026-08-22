@@ -1,5 +1,6 @@
 from django.http import Http404
 from django.shortcuts import render
+from django.utils import timezone
 
 from catalogue.models import Representation
 
@@ -31,10 +32,16 @@ def show(request, representation_id):
     title = "Fiche d'une représentation"
     rep_date = representation.schedule.strftime('%Y-%m-%d')
     rep_time = representation.schedule.strftime('%H:%M')
+    can_reserve = (
+        representation.show.bookable
+        and representation.schedule > timezone.now()
+        and representation.show.prices.exists()
+    )
 
     return render(request, 'representation/show.html', {
         'representation': representation,
         'title': title,
         'rep_date': rep_date,
         'rep_time': rep_time,
+        'can_reserve': can_reserve,
     })
