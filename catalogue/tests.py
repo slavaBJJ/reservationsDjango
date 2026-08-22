@@ -13,6 +13,7 @@ from catalogue.models import (
     Representation,
     RepresentationReservation,
     Reservation,
+    Review,
     Show,
 )
 
@@ -244,3 +245,104 @@ class MyReservationsTests(TestCase):
         ))
 
         self.assertEqual(response.status_code, 404)
+
+
+class ShowReviewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='critic', password='secret')
+        cls.other_user = User.objects.create_user(username='reader', password='secret')
+        cls.show = Show.objects.create(
+            slug='piece-test',
+            title='Pièce test',
+            created_in=2026,
+        )
+        cls.validated_review = Review.objects.create(
+            user=cls.other_user,
+            show=cls.show,
+            review='Avis public',
+            stars=4,
+            validated=True,
+        )
+
+    def test_show_only_displays_validated_reviews_publicly(self):
+        Review.objects.create(
+            user=self.user,
+            show=self.show,
+            review='Avis secret en attente',
+            stars=3,
+            validated=False,
+        )
+
+        response = self.client.get(reverse('catalogue:show-show', args=[self.show.pk]))
+
+        self.assertContains(response, 'Avis public')
+        self.assertNotContains(response, 'Avis secret en attente')
+
+    def test_authenticated_user_can_submit_review_for_moderation(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('catalogue:review-create', args=[self.show.pk]),
+            {'stars': 5, 'review': 'Excellent spectacle'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('catalogue:show-show', args=[self.show.pk]),
+        )
+        review = Review.objects.get(user=self.user, show=self.show)
+        self.assertEqual(review.stars, 5)
+        self.assertFalse(review.validated)
+
+    def test_invalid_star_rating_is_rejected(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('catalogue:review-create', args=[self.show.pk]),
+            {'stars': 6, 'review': 'Note invalide'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('stars', response.context['form'].errors)
+        self.assertFalse(Review.objects.filter(user=self.user).exists())
+
+    def test_editing_review_resets_moderation(self):
+        review = Review.objects.create(
+            user=self.user,
+            show=self.show,
+            review='Ancien texte',
+            stars=2,
+            validated=True,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('catalogue:review-edit', args=[review.pk]),
+            {'stars': 4, 'review': 'Nouveau texte'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('catalogue:show-show', args=[self.show.pk]),
+        )
+        review.refresh_from_db()
+        self.assertEqual(review.review, 'Nouveau texte')
+        self.assertFalse(review.validated)
+        self.assertIsNotNone(review.updated_at)
+
+    def test_user_cannot_edit_or_delete_another_users_review(self):
+        self.client.force_login(self.user)
+
+        edit_response = self.client.get(reverse(
+            'catalogue:review-edit',
+            args=[self.validated_review.pk],
+        ))
+        delete_response = self.client.post(reverse(
+            'catalogue:review-delete',
+            args=[self.validated_review.pk],
+        ))
+
+        self.assertEqual(edit_response.status_code, 404)
+        self.assertEqual(delete_response.status_code, 404)
+        self.assertTrue(Review.objects.filter(pk=self.validated_review.pk).exists())

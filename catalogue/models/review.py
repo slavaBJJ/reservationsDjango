@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .show import Show
@@ -16,8 +17,10 @@ class Review(models.Model):
         related_name='reviews',
     )
     review = models.TextField()
-    stars = models.PositiveSmallIntegerField()
-    validated = models.BooleanField()
+    stars = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+    )
+    validated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True)
 
@@ -26,3 +29,9 @@ class Review(models.Model):
 
     class Meta:
         db_table = "reviews"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'show'],
+                name='unique_review_user_show',
+            ),
+        ]

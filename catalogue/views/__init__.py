@@ -6,3 +6,4 @@ from .location import *
 from .show_ import *
 from .representation import *
 from .reservation import *
+from .review import *
