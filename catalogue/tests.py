@@ -168,3 +168,79 @@ class ReservationWorkflowTests(TestCase):
             reverse('catalogue:representation-show', args=[past_representation.pk]),
         )
         self.assertFalse(Reservation.objects.exists())
+
+
+class MyReservationsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner = User.objects.create_user(username='owner', password='secret')
+        cls.other_user = User.objects.create_user(username='other', password='secret')
+        locality = Locality.objects.create(postal_code='5000', locality='Namur')
+        location = Location.objects.create(
+            slug='grand-manege',
+            designation='Grand Manège',
+            locality=locality,
+        )
+        show = Show.objects.create(
+            slug='danse-test',
+            title='Danse test',
+            created_in=2026,
+            location=location,
+        )
+        representation = Representation.objects.create(
+            show=show,
+            schedule=timezone.now() + timedelta(days=10),
+            location=location,
+        )
+        cls.owner_reservation = Reservation.objects.create(
+            user=cls.owner,
+            status='en attente',
+        )
+        RepresentationReservation.objects.create(
+            reservation=cls.owner_reservation,
+            representation=representation,
+            price=Decimal('18.00'),
+            quantity=2,
+        )
+        cls.other_reservation = Reservation.objects.create(
+            user=cls.other_user,
+            status='payée',
+        )
+
+    def test_reservation_list_requires_authentication(self):
+        url = reverse('catalogue:reservation-index')
+
+        response = self.client.get(url)
+
+        self.assertRedirects(response, f'{reverse("login")}?next={url}')
+
+    def test_user_only_sees_own_reservations(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse('catalogue:reservation-index'))
+
+        self.assertContains(response, f'Réservation n°{self.owner_reservation.pk}')
+        self.assertNotContains(response, f'Réservation n°{self.other_reservation.pk}')
+        self.assertContains(response, 'Danse test')
+
+    def test_owner_can_view_reservation_details(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse(
+            'catalogue:reservation-show',
+            args=[self.owner_reservation.pk],
+        ))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Danse test')
+        self.assertContains(response, '18.00 €')
+
+    def test_user_cannot_view_another_users_reservation(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(reverse(
+            'catalogue:reservation-show',
+            args=[self.other_reservation.pk],
+        ))
+
+        self.assertEqual(response.status_code, 404)
