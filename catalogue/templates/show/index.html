@@ -1,13 +1,55 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Liste des spectacles{% endblock %}
+{% block title %} Liste des spectacles {% endblock %}
 
 {% block content %}
     <h1>{{ title }}</h1>
+
+    <form method="get">
+        <p>
+            <label for="q">Rechercher</label>
+            <input id="q" name="q" type="search" value="{{ search }}"
+                   placeholder="Titre ou description">
+        </p>
+        <p>
+            <label for="location">Lieu</label>
+            <select id="location" name="location">
+                <option value="">Tous les lieux</option>
+                {% for location in locations %}
+                    <option value="{{ location.id }}"
+                            {% if selected_location == location.id|stringformat:'s' %}selected{% endif %}>
+                        {{ location.designation }}
+                    </option>
+                {% endfor %}
+            </select>
+        </p>
+        <p>
+            <label for="bookable">Réservation</label>
+            <select id="bookable" name="bookable">
+                <option value="">Tous les spectacles</option>
+                <option value="1" {% if selected_bookable == '1' %}selected{% endif %}>Réservable</option>
+                <option value="0" {% if selected_bookable == '0' %}selected{% endif %}>Non réservable</option>
+            </select>
+        </p>
+        <input type="hidden" name="sort" value="{{ selected_sort }}">
+        <button type="submit">Appliquer</button>
+        <a href="{% url 'catalogue:show-index' %}">Réinitialiser</a>
+    </form>
+
+    <nav aria-label="Trier les spectacles">
+        Trier par :
+        <a href="{% querystring sort='title' page=None %}">titre</a> |
+        <a href="{% querystring sort='location' page=None %}">lieu</a> |
+        <a href="{% querystring sort='bookable' page=None %}">disponibilité</a> |
+        <a href="{% querystring sort='price' page=None %}">prix</a>
+    </nav>
+
     <ul>
     {% for show in shows %}
         <li>
             <a href="{% url 'catalogue:show-show' show.id %}">{{ show.title }}</a>
+            {% if show.location %}— {{ show.location.designation }}{% endif %}
+            {% if show.min_price is not None %}— dès {{ show.min_price }} €{% endif %}
             {% if not show.bookable %}
                 <em>Réservation indisponible</em>
             {% endif %}
@@ -16,4 +58,18 @@
         <li>Aucun spectacle disponible.</li>
     {% endfor %}
     </ul>
+
+    {% if shows.paginator.num_pages > 1 %}
+        <nav aria-label="Pagination">
+            {% if shows.has_previous %}
+                <a href="{% querystring page=shows.previous_page_number %}">Précédent</a>
+            {% endif %}
+
+            <span>Page {{ shows.number }} sur {{ shows.paginator.num_pages }}</span>
+
+            {% if shows.has_next %}
+                <a href="{% querystring page=shows.next_page_number %}">Suivant</a>
+            {% endif %}
+        </nav>
+    {% endif %}
 {% endblock %}
