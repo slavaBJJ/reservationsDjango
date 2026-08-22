@@ -1,0 +1,25 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <p><strong>Spectacle :</strong> {{ representation.show.title }}</p>
+    <p>
+        <strong>Date :</strong>
+        {{ representation.schedule|date:'d/m/Y H:i' }}
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Confirmer la réservation</button>
+    </form>
+
+    <nav>
+        <a href="{% url 'catalogue:representation-show' representation.id %}">
+            Annuler et revenir à la représentation
+        </a>
+    </nav>
+{% endblock %}

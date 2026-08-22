@@ -31,6 +31,11 @@ urlpatterns = [
         views.representation.show,
         name='representation-show',
     ),
+    path(
+        'representation/<int:representation_id>/reserve',
+        views.reservation.create,
+        name='reservation-create',
+    ),
     path('api/token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
 
