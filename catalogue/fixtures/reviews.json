@@ -12,7 +12,7 @@
       ],
       "review": "Excellent.",
       "stars": 5,
-      "validated": true,
+      "moderation_status": "approved",
       "created_at": "2026-08-20T00:00:00Z",
       "updated_at": null
     }
@@ -30,7 +30,7 @@
       ],
       "review": "Pas mal.",
       "stars": 3,
-      "validated": false,
+      "moderation_status": "pending",
       "created_at": "2026-08-20T00:00:00Z",
       "updated_at": null
     }
@@ -48,7 +48,7 @@
       ],
       "review": "Magnifique !",
       "stars": 5,
-      "validated": true,
+      "moderation_status": "approved",
       "created_at": "2026-08-20T00:00:00Z",
       "updated_at": null
     }

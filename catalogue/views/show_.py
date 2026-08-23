@@ -4,6 +4,7 @@ from django.http import Http404
 from django.shortcuts import render
 
 from catalogue.models import Location, Show
+from catalogue.review_rules import can_review_show
 
 
 def index(request):
@@ -59,16 +60,19 @@ def show(request, show_id):
         raise Http404('Spectacle inexistant')
 
     title = "Fiche d'un spectacle"
-    reviews = show.reviews.filter(validated=True).select_related('user').order_by(
-        '-created_at',
-    )
+    reviews = show.reviews.filter(
+        moderation_status='approved',
+    ).select_related('user').order_by('-created_at')
     user_review = None
+    user_can_review = False
     if request.user.is_authenticated:
         user_review = show.reviews.filter(user=request.user).first()
+        user_can_review = can_review_show(request.user, show)
 
     return render(request, 'show/show.html', {
         'show': show,
         'title': title,
         'reviews': reviews,
         'user_review': user_review,
+        'user_can_review': user_can_review,
     })

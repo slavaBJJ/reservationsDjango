@@ -44,6 +44,12 @@ urlpatterns = [
     path('show/<int:show_id>/review', views.review.create, name='review-create'),
     path('review/<int:review_id>/edit', views.review.edit, name='review-edit'),
     path('review/<int:review_id>/delete', views.review.delete, name='review-delete'),
+    path('reviews/moderation/', views.review.moderation, name='review-moderation'),
+    path(
+        'reviews/<int:review_id>/moderate/',
+        views.review.moderate,
+        name='review-moderate',
+    ),
     path('representation/', views.representation.index, name='representation-index'),
     path(
         'representation/<int:representation_id>',
