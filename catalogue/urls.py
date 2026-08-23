@@ -4,10 +4,16 @@ from django.urls import path
 from . import views
 from api.catalogue.views import ArtistListCreateView, ArtistRetrieveUpdateDestroyView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .feeds import UpcomingRepresentationsFeed
 
 app_name='catalogue'
 
 urlpatterns = [
+    path(
+        'rss/representations/',
+        UpcomingRepresentationsFeed(),
+        name='representations-rss',
+    ),
     path('artist/', views.artist.index, name='artist-index'),
     path('artist/<int:artist_id>', views.artist.show, name='artist-show'),
     path('artist/edit/<int:artist_id>',views.artist.edit, name='artist-edit'),
