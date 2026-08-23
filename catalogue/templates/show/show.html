@@ -65,5 +65,27 @@
         {% endfor %}
     </section>
 
+    <section>
+        <h2>Critiques de presse</h2>
+        {% for press_review in press_reviews %}
+            <article>
+                <h3>{{ press_review.title }}</h3>
+                <p>Par {{ press_review.user.get_full_name|default:press_review.user.username }}</p>
+                {% if press_review.content %}
+                    <p>{{ press_review.content|linebreaksbr }}</p>
+                {% endif %}
+                {% if press_review.url %}
+                    <p>
+                        <a href="{{ press_review.url }}" rel="noopener noreferrer">
+                            Lire l’article original
+                        </a>
+                    </p>
+                {% endif %}
+            </article>
+        {% empty %}
+            <p>Aucune critique de presse publiée pour ce spectacle.</p>
+        {% endfor %}
+    </section>
+
     <nav><a href="{% url 'catalogue:show-index' %}">Retour à l'index</a></nav>
 {% endblock %}

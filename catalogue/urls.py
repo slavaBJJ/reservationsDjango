@@ -19,6 +19,32 @@ urlpatterns = [
         views.csv_catalogue.import_shows,
         name='shows-csv-import',
     ),
+    path('press-reviews/', views.press_review.index, name='press-review-index'),
+    path(
+        'press-reviews/create/',
+        views.press_review.create,
+        name='press-review-create',
+    ),
+    path(
+        'press-reviews/<int:press_review_id>/edit/',
+        views.press_review.edit,
+        name='press-review-edit',
+    ),
+    path(
+        'press-reviews/<int:press_review_id>/delete/',
+        views.press_review.delete,
+        name='press-review-delete',
+    ),
+    path(
+        'press-reviews/moderation/',
+        views.press_review.moderation,
+        name='press-review-moderation',
+    ),
+    path(
+        'press-reviews/<int:press_review_id>/moderate/',
+        views.press_review.moderate,
+        name='press-review-moderate',
+    ),
     path(
         'rss/representations/',
         UpcomingRepresentationsFeed(),

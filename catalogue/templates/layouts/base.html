@@ -22,7 +22,27 @@
                         Importer des spectacles en CSV
                     </a>
                 </p>
+                <p>
+                    <a href="{% url 'catalogue:press-review-moderation' %}">
+                        Modérer les critiques de presse
+                    </a>
+                </p>
             {% endif %}
+            {% for group in request.user.groups.all %}
+                {% if group.name == 'CRITIC' %}
+                    <p>
+                        <a href="{% url 'catalogue:press-review-index' %}">
+                            Mes critiques de presse
+                        </a>
+                    </p>
+                {% elif group.name == 'PRODUCER' and not request.user.is_staff %}
+                    <p>
+                        <a href="{% url 'catalogue:press-review-moderation' %}">
+                            Modérer les critiques de presse
+                        </a>
+                    </p>
+                {% endif %}
+            {% endfor %}
 
             <form action = "{% url 'logout' %}" method ="post">
                 {%csrf_token%}

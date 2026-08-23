@@ -66,9 +66,14 @@ def show(request, show_id):
     if request.user.is_authenticated:
         user_review = show.reviews.filter(user=request.user).first()
 
+    press_reviews = show.press_reviews.filter(
+        moderation_status='approved',
+    ).select_related('user')
+
     return render(request, 'show/show.html', {
         'show': show,
         'title': title,
         'reviews': reviews,
         'user_review': user_review,
+        'press_reviews': press_reviews,
     })
