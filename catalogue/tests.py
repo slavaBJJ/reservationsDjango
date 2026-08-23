@@ -346,3 +346,76 @@ class ShowReviewTests(TestCase):
         self.assertEqual(edit_response.status_code, 404)
         self.assertEqual(delete_response.status_code, 404)
         self.assertTrue(Review.objects.filter(pk=self.validated_review.pk).exists())
+
+
+class UpcomingRepresentationsFeedTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        locality = Locality.objects.create(postal_code='7000', locality='Mons')
+        location = Location.objects.create(
+            slug='theatre-mons',
+            designation='Théâtre de Mons',
+            locality=locality,
+        )
+        earlier_show = Show.objects.create(
+            slug='spectacle-proche',
+            title='Spectacle proche',
+            description='La prochaine représentation.',
+            created_in=2026,
+            location=location,
+        )
+        later_show = Show.objects.create(
+            slug='spectacle-lointain',
+            title='Spectacle lointain',
+            created_in=2026,
+            location=location,
+        )
+        past_show = Show.objects.create(
+            slug='spectacle-passe',
+            title='Spectacle passé',
+            created_in=2025,
+            location=location,
+        )
+        cls.earlier = Representation.objects.create(
+            show=earlier_show,
+            schedule=timezone.now() + timedelta(days=2),
+            location=location,
+        )
+        cls.later = Representation.objects.create(
+            show=later_show,
+            schedule=timezone.now() + timedelta(days=8),
+            location=location,
+        )
+        Representation.objects.create(
+            show=past_show,
+            schedule=timezone.now() - timedelta(days=2),
+            location=location,
+        )
+
+    def test_feed_is_valid_rss_and_only_contains_future_items(self):
+        response = self.client.get(reverse('catalogue:representations-rss'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/rss+xml; charset=utf-8')
+        self.assertContains(response, '<rss version="2.0"')
+        self.assertContains(response, 'Spectacle proche')
+        self.assertContains(response, 'Spectacle lointain')
+        self.assertNotContains(response, 'Spectacle passé')
+
+    def test_feed_orders_representations_chronologically(self):
+        response = self.client.get(reverse('catalogue:representations-rss'))
+        content = response.content.decode()
+
+        self.assertLess(
+            content.index('Spectacle proche'),
+            content.index('Spectacle lointain'),
+        )
+
+    def test_feed_items_link_to_representation_details(self):
+        response = self.client.get(reverse('catalogue:representations-rss'))
+
+        expected_path = reverse(
+            'catalogue:representation-show',
+            args=[self.earlier.pk],
+        )
+        self.assertContains(response, f'http://testserver{expected_path}')
