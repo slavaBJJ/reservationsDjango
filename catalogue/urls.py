@@ -2,7 +2,12 @@
 
 from django.urls import path
 from . import views
-from api.catalogue.views import ArtistListCreateView, ArtistRetrieveUpdateDestroyView
+from api.catalogue.views import (
+    ArtistListCreateView,
+    ArtistRetrieveUpdateDestroyView,
+    ShowListCreateView,
+    ShowRetrieveUpdateDestroyView,
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .feeds import UpcomingRepresentationsFeed
 
@@ -62,6 +67,12 @@ urlpatterns = [
     path('type/delete/<int:type_id>', views.type.delete, name='type-delete'),
     path('api/artists/', ArtistListCreateView.as_view(), name='artist-list'),
     path('api/artists/<int:pk>/', ArtistRetrieveUpdateDestroyView.as_view(), name='artist-detail'),
+    path('api/shows/', ShowListCreateView.as_view(), name='show-api-list'),
+    path(
+        'api/shows/<int:pk>/',
+        ShowRetrieveUpdateDestroyView.as_view(),
+        name='show-api-detail',
+    ),
     path('locality/', views.locality.index, name='locality-index'),
     path('locality/create', views.locality.create, name='locality-create'),
     path('locality/<int:locality_id>', views.locality.show, name='locality-show'),
