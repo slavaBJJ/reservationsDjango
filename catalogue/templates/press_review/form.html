@@ -1,0 +1,16 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    <p>Ajoutez le texte de l'article, un lien externe, ou les deux.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Envoyer pour modération</button>
+    </form>
+
+    <nav><a href="{% url 'catalogue:press-review-index' %}">Annuler</a></nav>
+{% endblock %}

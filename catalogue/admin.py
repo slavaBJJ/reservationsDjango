@@ -8,6 +8,7 @@ from catalogue.models import (
     Locality,
     Location,
     Price,
+    PressReview,
     Representation,
     RepresentationReservation,
     Reservation,
@@ -90,10 +91,33 @@ class ReservationAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('user', 'show', 'stars', 'validated', 'created_at')
+    list_display = (
+        'user',
+        'show',
+        'stars',
+        'moderation_status',
+        'moderated_by',
+        'created_at',
+    )
     search_fields = ('user__username', 'show__title', 'review')
-    list_filter = ('validated', 'stars', 'created_at')
-    list_select_related = ('user', 'show')
+    list_filter = ('moderation_status', 'stars', 'created_at')
+    list_select_related = ('user', 'show', 'moderated_by')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(PressReview)
+class PressReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'user',
+        'show',
+        'moderation_status',
+        'moderated_by',
+        'created_at',
+    )
+    search_fields = ('title', 'content', 'user__username', 'show__title')
+    list_filter = ('moderation_status', 'created_at')
+    list_select_related = ('user', 'show', 'moderated_by')
     date_hierarchy = 'created_at'
 
 

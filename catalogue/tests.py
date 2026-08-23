@@ -12,6 +12,7 @@ from django.utils import timezone
 from catalogue.models import (
     Locality,
     Location,
+    PressReview,
     Price,
     Representation,
     RepresentationReservation,
@@ -19,7 +20,13 @@ from catalogue.models import (
     Review,
     Show,
 )
-from catalogue.roles import ROLE_MEMBER, ROLE_PRODUCER, has_role, is_producer_for
+from catalogue.roles import (
+    ROLE_CRITIC,
+    ROLE_MEMBER,
+    ROLE_PRODUCER,
+    has_role,
+    is_producer_for,
+)
 from accounts.forms import UserSignUpForm
 
 
@@ -315,7 +322,21 @@ class ShowReviewTests(TestCase):
             show=cls.show,
             review='Avis public',
             stars=4,
-            validated=True,
+            moderation_status=Review.ModerationStatus.APPROVED,
+        )
+        past_representation = Representation.objects.create(
+            show=cls.show,
+            schedule=timezone.now() - timedelta(days=2),
+        )
+        eligible_reservation = Reservation.objects.create(
+            user=cls.user,
+            status='payée',
+        )
+        RepresentationReservation.objects.create(
+            reservation=eligible_reservation,
+            representation=past_representation,
+            price=Decimal('20.00'),
+            quantity=1,
         )
 
     def test_show_only_displays_validated_reviews_publicly(self):
@@ -324,7 +345,7 @@ class ShowReviewTests(TestCase):
             show=self.show,
             review='Avis secret en attente',
             stars=3,
-            validated=False,
+            moderation_status=Review.ModerationStatus.PENDING,
         )
 
         response = self.client.get(reverse('catalogue:show-show', args=[self.show.pk]))
@@ -346,7 +367,69 @@ class ShowReviewTests(TestCase):
         )
         review = Review.objects.get(user=self.user, show=self.show)
         self.assertEqual(review.stars, 5)
-        self.assertFalse(review.validated)
+        self.assertEqual(review.moderation_status, Review.ModerationStatus.PENDING)
+
+    def test_user_without_past_reservation_cannot_submit_review(self):
+        ineligible_user = User.objects.create_user(username='ineligible')
+        self.client.force_login(ineligible_user)
+
+        response = self.client.post(
+            reverse('catalogue:review-create', args=[self.show.pk]),
+            {'stars': 5, 'review': 'Avis non autorisé'},
+            follow=True,
+        )
+
+        self.assertContains(response, 'Vous devez avoir réservé une représentation passée')
+        self.assertFalse(Review.objects.filter(user=ineligible_user).exists())
+
+    def test_cancelled_reservation_does_not_allow_review(self):
+        cancelled_user = User.objects.create_user(username='cancelled')
+        past_representation = self.show.representations.first()
+        reservation = Reservation.objects.create(
+            user=cancelled_user,
+            status='annulée',
+        )
+        RepresentationReservation.objects.create(
+            reservation=reservation,
+            representation=past_representation,
+            price=Decimal('20.00'),
+            quantity=1,
+        )
+        self.client.force_login(cancelled_user)
+
+        response = self.client.get(
+            reverse('catalogue:review-create', args=[self.show.pk]),
+            follow=True,
+        )
+
+        self.assertContains(response, 'Vous devez avoir réservé une représentation passée')
+        self.assertFalse(Review.objects.filter(user=cancelled_user).exists())
+
+    def test_future_reservation_does_not_allow_review(self):
+        future_user = User.objects.create_user(username='future-attendee')
+        future_representation = Representation.objects.create(
+            show=self.show,
+            schedule=timezone.now() + timedelta(days=2),
+        )
+        reservation = Reservation.objects.create(
+            user=future_user,
+            status='payée',
+        )
+        RepresentationReservation.objects.create(
+            reservation=reservation,
+            representation=future_representation,
+            price=Decimal('20.00'),
+            quantity=1,
+        )
+        self.client.force_login(future_user)
+
+        response = self.client.get(
+            reverse('catalogue:review-create', args=[self.show.pk]),
+            follow=True,
+        )
+
+        self.assertContains(response, 'Vous devez avoir réservé une représentation passée')
+        self.assertFalse(Review.objects.filter(user=future_user).exists())
 
     def test_invalid_star_rating_is_rejected(self):
         self.client.force_login(self.user)
@@ -366,7 +449,7 @@ class ShowReviewTests(TestCase):
             show=self.show,
             review='Ancien texte',
             stars=2,
-            validated=True,
+            moderation_status=Review.ModerationStatus.APPROVED,
         )
         self.client.force_login(self.user)
 
@@ -381,7 +464,7 @@ class ShowReviewTests(TestCase):
         )
         review.refresh_from_db()
         self.assertEqual(review.review, 'Nouveau texte')
-        self.assertFalse(review.validated)
+        self.assertEqual(review.moderation_status, Review.ModerationStatus.PENDING)
         self.assertIsNotNone(review.updated_at)
 
     def test_user_cannot_edit_or_delete_another_users_review(self):
@@ -399,6 +482,259 @@ class ShowReviewTests(TestCase):
         self.assertEqual(edit_response.status_code, 404)
         self.assertEqual(delete_response.status_code, 404)
         self.assertTrue(Review.objects.filter(pk=self.validated_review.pk).exists())
+
+
+class ProducerReviewModerationTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        producer_group = Group.objects.create(name=ROLE_PRODUCER)
+        cls.producer = User.objects.create_user(username='producer-one')
+        cls.other_producer = User.objects.create_user(username='producer-two')
+        cls.member = User.objects.create_user(username='ordinary-member')
+        cls.staff = User.objects.create_user(username='staff-user', is_staff=True)
+        cls.producer.groups.add(producer_group)
+        cls.other_producer.groups.add(producer_group)
+
+        cls.own_show = Show.objects.create(
+            slug='producer-show',
+            title='Spectacle du producteur',
+            created_in=2026,
+        )
+        cls.other_show = Show.objects.create(
+            slug='other-producer-show',
+            title='Spectacle d’un autre producteur',
+            created_in=2026,
+        )
+        cls.own_show.producers.add(cls.producer)
+        cls.other_show.producers.add(cls.other_producer)
+
+        reviewer = User.objects.create_user(username='review-author')
+        cls.own_review = Review.objects.create(
+            user=reviewer,
+            show=cls.own_show,
+            review='À modérer par le premier producteur',
+            stars=5,
+        )
+        cls.other_review = Review.objects.create(
+            user=reviewer,
+            show=cls.other_show,
+            review='À modérer par le second producteur',
+            stars=3,
+        )
+
+    def test_producer_only_sees_reviews_for_own_shows(self):
+        self.client.force_login(self.producer)
+
+        response = self.client.get(reverse('catalogue:review-moderation'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.own_review.review)
+        self.assertNotContains(response, self.other_review.review)
+
+    def test_member_cannot_access_moderation_page(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('catalogue:review-moderation'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_producer_can_approve_review_with_json_response(self):
+        self.client.force_login(self.producer)
+
+        response = self.client.post(
+            reverse('catalogue:review-moderate', args=[self.own_review.pk]),
+            {'action': 'approve'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response.json()['status'], Review.ModerationStatus.APPROVED)
+        self.own_review.refresh_from_db()
+        self.assertEqual(
+            self.own_review.moderation_status,
+            Review.ModerationStatus.APPROVED,
+        )
+        self.assertEqual(self.own_review.moderated_by, self.producer)
+        self.assertIsNotNone(self.own_review.moderated_at)
+
+    def test_producer_cannot_moderate_another_producers_review(self):
+        self.client.force_login(self.producer)
+
+        response = self.client.post(
+            reverse('catalogue:review-moderate', args=[self.other_review.pk]),
+            {'action': 'reject'},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.other_review.refresh_from_db()
+        self.assertEqual(
+            self.other_review.moderation_status,
+            Review.ModerationStatus.PENDING,
+        )
+
+    def test_staff_can_reject_any_review(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('catalogue:review-moderate', args=[self.other_review.pk]),
+            {'action': 'reject'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.other_review.refresh_from_db()
+        self.assertEqual(
+            self.other_review.moderation_status,
+            Review.ModerationStatus.REJECTED,
+        )
+        self.assertEqual(self.other_review.moderated_by, self.staff)
+
+
+class PressReviewWorkflowTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        critic_group = Group.objects.create(name=ROLE_CRITIC)
+        producer_group = Group.objects.create(name=ROLE_PRODUCER)
+        cls.critic = User.objects.create_user(username='press-critic')
+        cls.other_critic = User.objects.create_user(username='other-critic')
+        cls.producer = User.objects.create_user(username='press-producer')
+        cls.other_producer = User.objects.create_user(username='outside-producer')
+        cls.member = User.objects.create_user(username='press-reader')
+        cls.critic.groups.add(critic_group)
+        cls.other_critic.groups.add(critic_group)
+        cls.producer.groups.add(producer_group)
+        cls.other_producer.groups.add(producer_group)
+
+        cls.show = Show.objects.create(
+            slug='press-show',
+            title='Spectacle pour la presse',
+            created_in=2026,
+        )
+        cls.show.producers.add(cls.producer)
+
+    def test_only_critic_can_open_submission_form(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('catalogue:press-review-create'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_critic_can_submit_article_for_moderation(self):
+        self.client.force_login(self.critic)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-create'),
+            {
+                'show': self.show.pk,
+                'title': 'Une soirée remarquable',
+                'content': 'Le spectacle propose une mise en scène remarquable.',
+                'url': '',
+            },
+        )
+
+        self.assertRedirects(response, reverse('catalogue:press-review-index'))
+        press_review = PressReview.objects.get(user=self.critic)
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.PENDING,
+        )
+
+    def test_article_or_external_link_is_required(self):
+        self.client.force_login(self.critic)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-create'),
+            {
+                'show': self.show.pk,
+                'title': 'Critique vide',
+                'content': '',
+                'url': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ajoutez le texte de l’article ou un lien externe')
+        self.assertFalse(PressReview.objects.exists())
+
+    def test_critic_cannot_edit_another_critics_submission(self):
+        press_review = PressReview.objects.create(
+            user=self.other_critic,
+            show=self.show,
+            title='Critique privée',
+            content='Contenu',
+        )
+        self.client.force_login(self.critic)
+
+        response = self.client.get(reverse(
+            'catalogue:press-review-edit',
+            args=[press_review.pk],
+        ))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_only_approved_press_reviews_are_public(self):
+        PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='Critique publiée',
+            content='Visible publiquement',
+            moderation_status=PressReview.ModerationStatus.APPROVED,
+        )
+        PressReview.objects.create(
+            user=self.other_critic,
+            show=self.show,
+            title='Critique en attente',
+            content='Invisible publiquement',
+        )
+
+        response = self.client.get(reverse('catalogue:show-show', args=[self.show.pk]))
+
+        self.assertContains(response, 'Visible publiquement')
+        self.assertNotContains(response, 'Invisible publiquement')
+
+    def test_assigned_producer_can_approve_with_json_response(self):
+        press_review = PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='À publier',
+            url='https://example.com/article',
+        )
+        self.client.force_login(self.producer)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-moderate', args=[press_review.pk]),
+            {'action': 'approve'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        press_review.refresh_from_db()
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.APPROVED,
+        )
+        self.assertEqual(press_review.moderated_by, self.producer)
+        self.assertIsNotNone(press_review.moderated_at)
+
+    def test_unassigned_producer_cannot_moderate(self):
+        press_review = PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='Hors périmètre',
+            content='Contenu',
+        )
+        self.client.force_login(self.other_producer)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-moderate', args=[press_review.pk]),
+            {'action': 'reject'},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        press_review.refresh_from_db()
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.PENDING,
+        )
 
 
 class UpcomingRepresentationsFeedTests(TestCase):

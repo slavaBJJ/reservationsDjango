@@ -1,0 +1,22 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+    <p><a href="{% url 'catalogue:press-review-create' %}">Soumettre une critique</a></p>
+
+    <ul>
+        {% for press_review in press_reviews %}
+            <li>
+                <strong>{{ press_review.title }}</strong>
+                — {{ press_review.show.title }}
+                — {{ press_review.get_moderation_status_display }}
+                — <a href="{% url 'catalogue:press-review-edit' press_review.id %}">Modifier</a>
+                — <a href="{% url 'catalogue:press-review-delete' press_review.id %}">Supprimer</a>
+            </li>
+        {% empty %}
+            <li>Vous n'avez soumis aucune critique.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

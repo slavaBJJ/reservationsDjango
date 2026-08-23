@@ -1,11 +1,10 @@
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .show import Show
 
 
-class Review(models.Model):
+class PressReview(models.Model):
     class ModerationStatus(models.TextChoices):
         PENDING = 'pending', 'En attente'
         APPROVED = 'approved', 'Publié'
@@ -14,17 +13,16 @@ class Review(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.RESTRICT,
-        related_name='reviews',
+        related_name='press_reviews',
     )
     show = models.ForeignKey(
         Show,
         on_delete=models.RESTRICT,
-        related_name='reviews',
+        related_name='press_reviews',
     )
-    review = models.TextField()
-    stars = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-    )
+    title = models.CharField(max_length=255)
+    content = models.TextField(blank=True)
+    url = models.URLField(blank=True)
     moderation_status = models.CharField(
         max_length=10,
         choices=ModerationStatus.choices,
@@ -35,20 +33,15 @@ class Review(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='moderated_reviews',
+        related_name='moderated_press_reviews',
     )
     moderated_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(null=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.show.title} : {self.stars}"
+        return f'{self.title} — {self.show.title}'
 
     class Meta:
-        db_table = "reviews"
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'show'],
-                name='unique_review_user_show',
-            ),
-        ]
+        db_table = 'press_reviews'
+        ordering = ('-created_at', '-pk')
