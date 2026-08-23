@@ -23,6 +23,13 @@
                     </a>
                 </p>
             {% endif %}
+            {% if can_moderate_reviews %}
+                <p>
+                    <a href="{% url 'catalogue:review-moderation' %}">
+                        Modérer les avis
+                    </a>
+                </p>
+            {% endif %}
 
             <form action = "{% url 'logout' %}" method ="post">
                 {%csrf_token%}

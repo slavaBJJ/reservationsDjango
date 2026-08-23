@@ -1,0 +1,86 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <form id="csrf-form">{% csrf_token %}</form>
+
+    <div id="moderation-message" role="status" aria-live="polite"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Spectacle</th>
+                <th>Auteur</th>
+                <th>Note</th>
+                <th>Commentaire</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+                <tr id="review-{{ review.id }}">
+                    <td>{{ review.show.title }}</td>
+                    <td>{{ review.user.username }}</td>
+                    <td>{{ review.stars }}/5</td>
+                    <td>{{ review.review }}</td>
+                    <td>
+                        <button
+                            type="button"
+                            class="moderate-review"
+                            data-url="{% url 'catalogue:review-moderate' review.id %}"
+                            data-action="approve">
+                            Publier
+                        </button>
+                        <button
+                            type="button"
+                            class="moderate-review"
+                            data-url="{% url 'catalogue:review-moderate' review.id %}"
+                            data-action="reject">
+                            Refuser
+                        </button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr id="no-pending-reviews">
+                    <td colspan="5">Aucun avis en attente.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        const csrfToken = document.querySelector('#csrf-form input[name="csrfmiddlewaretoken"]').value;
+        const message = document.getElementById('moderation-message');
+
+        document.querySelectorAll('.moderate-review').forEach((button) => {
+            button.addEventListener('click', async () => {
+                button.disabled = true;
+                const body = new URLSearchParams({action: button.dataset.action});
+
+                try {
+                    const response = await fetch(button.dataset.url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: body.toString(),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error || 'La modération a échoué.');
+                    }
+
+                    document.getElementById(`review-${data.review_id}`).remove();
+                    message.textContent = `Avis ${data.status_label.toLowerCase()}.`;
+                } catch (error) {
+                    message.textContent = error.message;
+                    button.disabled = false;
+                }
+            });
+        });
+    </script>
+{% endblock %}

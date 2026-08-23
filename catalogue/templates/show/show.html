@@ -34,10 +34,15 @@
 
         {% if request.user.is_authenticated %}
             {% if user_review %}
-                {% if not user_review.validated %}
+                {% if user_review.moderation_status == 'pending' %}
                     <article>
                         <p><strong>Votre avis est en attente de modération.</strong></p>
                         <p>{{ user_review.stars }}/5 — {{ user_review.review }}</p>
+                    </article>
+                {% elif user_review.moderation_status == 'rejected' %}
+                    <article>
+                        <p><strong>Votre avis a été refusé.</strong></p>
+                        <p>Vous pouvez le modifier puis le soumettre à nouveau.</p>
                     </article>
                 {% endif %}
                 <p>
@@ -45,8 +50,15 @@
                     —
                     <a href="{% url 'catalogue:review-delete' user_review.id %}">Supprimer mon avis</a>
                 </p>
-            {% else %}
+            {% elif user_can_review %}
                 <p><a href="{% url 'catalogue:review-create' show.id %}">Donner mon avis</a></p>
+            {% else %}
+                <p>
+                    <em>
+                        Vous pourrez donner votre avis après avoir réservé et assisté
+                        à une représentation de ce spectacle.
+                    </em>
+                </p>
             {% endif %}
         {% else %}
             <p><a href="{% url 'login' %}?next={{ request.path|urlencode }}">Connectez-vous pour donner votre avis</a></p>
