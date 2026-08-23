@@ -12,6 +12,17 @@
             <p>Bnjour {{ request.user.username }}!</p>
             <p><a href="{% url 'accounts:user-profile' %}">Mon profil</a></p>
             <p><a href="{% url 'catalogue:reservation-index' %}">Mes réservations</a></p>
+            {% if request.user.is_staff %}
+                <p>
+                    <a href="{% url 'catalogue:shows-csv-export' %}">
+                        Exporter les spectacles en CSV
+                    </a>
+                    —
+                    <a href="{% url 'catalogue:shows-csv-import' %}">
+                        Importer des spectacles en CSV
+                    </a>
+                </p>
+            {% endif %}
 
             <form action = "{% url 'logout' %}" method ="post">
                 {%csrf_token%}
