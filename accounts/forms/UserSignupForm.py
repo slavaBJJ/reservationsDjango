@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from catalogue.models import UserMeta
+from catalogue.roles import ROLE_MEMBER
 from django.db import models
 
 class UserSignUpForm(UserCreationForm):
@@ -50,7 +51,7 @@ class UserSignUpForm(UserCreationForm):
         user.save()
 
         # Ajout de l'utilisateur au groupe MEMBER => rôle de membre
-        memberGroup = Group.objects.get(name='MEMBER')
+        memberGroup, _ = Group.objects.get_or_create(name=ROLE_MEMBER)
         memberGroup.user_set.add(user)
 
         if self.cleaned_data['langue']:

@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from .location import *
 from .price import Price
 
@@ -28,6 +29,11 @@ class Show(models.Model):
         Price,
         related_name='shows',
         db_table='price_show',
+    )
+    producers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='produced_shows',
+        blank=True,
     )
 
     objects = ShowManager()

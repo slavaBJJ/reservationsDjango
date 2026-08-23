@@ -57,10 +57,16 @@ class PriceAdmin(admin.ModelAdmin):
 @admin.register(Show)
 class ShowAdmin(admin.ModelAdmin):
     list_display = ('title', 'created_in', 'location', 'bookable', 'duration')
-    search_fields = ('title', 'slug', 'description', 'location__designation')
+    search_fields = (
+        'title',
+        'slug',
+        'description',
+        'location__designation',
+        'producers__username',
+    )
     list_filter = ('bookable', 'created_in', 'location')
     list_select_related = ('location',)
-    filter_horizontal = ('prices',)
+    filter_horizontal = ('prices', 'producers')
     prepopulated_fields = {'slug': ('title',)}
 
 

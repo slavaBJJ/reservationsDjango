@@ -3,7 +3,7 @@ from datetime import timedelta
 from decimal import Decimal
 from io import StringIO
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -19,6 +19,56 @@ from catalogue.models import (
     Review,
     Show,
 )
+from catalogue.roles import ROLE_MEMBER, ROLE_PRODUCER, has_role, is_producer_for
+from accounts.forms import UserSignUpForm
+
+
+class BusinessRoleTests(TestCase):
+    def test_signup_creates_member_group_when_missing(self):
+        self.assertFalse(Group.objects.filter(name=ROLE_MEMBER).exists())
+        form = UserSignUpForm(data={
+            'username': 'new-member',
+            'email': 'member@example.com',
+            'password1': 'A-secure-password-2026',
+            'password2': 'A-secure-password-2026',
+            'first_name': 'Nouveau',
+            'last_name': 'Membre',
+            'langue': 'fr',
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+
+        self.assertTrue(user.groups.filter(name=ROLE_MEMBER).exists())
+        self.assertTrue(has_role(user, ROLE_MEMBER))
+
+    def test_producer_must_have_role_and_be_assigned_to_show(self):
+        producer = User.objects.create_user(username='producer')
+        producer_group = Group.objects.create(name=ROLE_PRODUCER)
+        producer.groups.add(producer_group)
+        show = Show.objects.create(
+            slug='production-test',
+            title='Production test',
+            created_in=2026,
+        )
+
+        self.assertFalse(is_producer_for(producer, show))
+
+        show.producers.add(producer)
+
+        self.assertTrue(is_producer_for(producer, show))
+        self.assertIn(show, producer.produced_shows.all())
+
+    def test_show_assignment_without_producer_role_is_not_enough(self):
+        member = User.objects.create_user(username='simple-member')
+        show = Show.objects.create(
+            slug='role-required',
+            title='Rôle requis',
+            created_in=2026,
+        )
+        show.producers.add(member)
+
+        self.assertFalse(is_producer_for(member, show))
 
 
 class ShowCatalogueTests(TestCase):
