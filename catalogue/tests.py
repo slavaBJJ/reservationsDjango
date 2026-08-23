@@ -12,6 +12,7 @@ from django.utils import timezone
 from catalogue.models import (
     Locality,
     Location,
+    PressReview,
     Price,
     Representation,
     RepresentationReservation,
@@ -19,7 +20,13 @@ from catalogue.models import (
     Review,
     Show,
 )
-from catalogue.roles import ROLE_MEMBER, ROLE_PRODUCER, has_role, is_producer_for
+from catalogue.roles import (
+    ROLE_CRITIC,
+    ROLE_MEMBER,
+    ROLE_PRODUCER,
+    has_role,
+    is_producer_for,
+)
 from accounts.forms import UserSignUpForm
 
 
@@ -580,6 +587,154 @@ class ProducerReviewModerationTests(TestCase):
             Review.ModerationStatus.REJECTED,
         )
         self.assertEqual(self.other_review.moderated_by, self.staff)
+
+
+class PressReviewWorkflowTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        critic_group = Group.objects.create(name=ROLE_CRITIC)
+        producer_group = Group.objects.create(name=ROLE_PRODUCER)
+        cls.critic = User.objects.create_user(username='press-critic')
+        cls.other_critic = User.objects.create_user(username='other-critic')
+        cls.producer = User.objects.create_user(username='press-producer')
+        cls.other_producer = User.objects.create_user(username='outside-producer')
+        cls.member = User.objects.create_user(username='press-reader')
+        cls.critic.groups.add(critic_group)
+        cls.other_critic.groups.add(critic_group)
+        cls.producer.groups.add(producer_group)
+        cls.other_producer.groups.add(producer_group)
+
+        cls.show = Show.objects.create(
+            slug='press-show',
+            title='Spectacle pour la presse',
+            created_in=2026,
+        )
+        cls.show.producers.add(cls.producer)
+
+    def test_only_critic_can_open_submission_form(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('catalogue:press-review-create'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_critic_can_submit_article_for_moderation(self):
+        self.client.force_login(self.critic)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-create'),
+            {
+                'show': self.show.pk,
+                'title': 'Une soirée remarquable',
+                'content': 'Le spectacle propose une mise en scène remarquable.',
+                'url': '',
+            },
+        )
+
+        self.assertRedirects(response, reverse('catalogue:press-review-index'))
+        press_review = PressReview.objects.get(user=self.critic)
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.PENDING,
+        )
+
+    def test_article_or_external_link_is_required(self):
+        self.client.force_login(self.critic)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-create'),
+            {
+                'show': self.show.pk,
+                'title': 'Critique vide',
+                'content': '',
+                'url': '',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ajoutez le texte de l’article ou un lien externe')
+        self.assertFalse(PressReview.objects.exists())
+
+    def test_critic_cannot_edit_another_critics_submission(self):
+        press_review = PressReview.objects.create(
+            user=self.other_critic,
+            show=self.show,
+            title='Critique privée',
+            content='Contenu',
+        )
+        self.client.force_login(self.critic)
+
+        response = self.client.get(reverse(
+            'catalogue:press-review-edit',
+            args=[press_review.pk],
+        ))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_only_approved_press_reviews_are_public(self):
+        PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='Critique publiée',
+            content='Visible publiquement',
+            moderation_status=PressReview.ModerationStatus.APPROVED,
+        )
+        PressReview.objects.create(
+            user=self.other_critic,
+            show=self.show,
+            title='Critique en attente',
+            content='Invisible publiquement',
+        )
+
+        response = self.client.get(reverse('catalogue:show-show', args=[self.show.pk]))
+
+        self.assertContains(response, 'Visible publiquement')
+        self.assertNotContains(response, 'Invisible publiquement')
+
+    def test_assigned_producer_can_approve_with_json_response(self):
+        press_review = PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='À publier',
+            url='https://example.com/article',
+        )
+        self.client.force_login(self.producer)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-moderate', args=[press_review.pk]),
+            {'action': 'approve'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        press_review.refresh_from_db()
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.APPROVED,
+        )
+        self.assertEqual(press_review.moderated_by, self.producer)
+        self.assertIsNotNone(press_review.moderated_at)
+
+    def test_unassigned_producer_cannot_moderate(self):
+        press_review = PressReview.objects.create(
+            user=self.critic,
+            show=self.show,
+            title='Hors périmètre',
+            content='Contenu',
+        )
+        self.client.force_login(self.other_producer)
+
+        response = self.client.post(
+            reverse('catalogue:press-review-moderate', args=[press_review.pk]),
+            {'action': 'reject'},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        press_review.refresh_from_db()
+        self.assertEqual(
+            press_review.moderation_status,
+            PressReview.ModerationStatus.PENDING,
+        )
 
 
 class UpcomingRepresentationsFeedTests(TestCase):

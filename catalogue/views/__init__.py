@@ -8,3 +8,4 @@ from .representation import *
 from .reservation import *
 from .review import *
 from .csv_catalogue import *
+from .press_review import *

@@ -69,10 +69,15 @@ def show(request, show_id):
         user_review = show.reviews.filter(user=request.user).first()
         user_can_review = can_review_show(request.user, show)
 
+    press_reviews = show.press_reviews.filter(
+        moderation_status='approved',
+    ).select_related('user')
+
     return render(request, 'show/show.html', {
         'show': show,
         'title': title,
         'reviews': reviews,
         'user_review': user_review,
         'user_can_review': user_can_review,
+        'press_reviews': press_reviews,
     })
