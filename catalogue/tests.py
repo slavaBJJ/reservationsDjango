@@ -1,7 +1,10 @@
+import csv
 from datetime import timedelta
 from decimal import Decimal
+from io import StringIO
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -419,3 +422,146 @@ class UpcomingRepresentationsFeedTests(TestCase):
             args=[self.earlier.pk],
         )
         self.assertContains(response, f'http://testserver{expected_path}')
+
+
+class ShowCsvExportTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.staff = User.objects.create_user(
+            username='catalogue-admin',
+            password='secret',
+            is_staff=True,
+        )
+        cls.customer = User.objects.create_user(
+            username='customer',
+            password='secret',
+        )
+        locality = Locality.objects.create(postal_code='6000', locality='Charleroi')
+        cls.location = Location.objects.create(
+            slug='palais-beaux-arts',
+            designation='Palais des Beaux-Arts',
+            locality=locality,
+        )
+        Show.objects.create(
+            slug='opera-accentue',
+            title='Opéra accentué',
+            description='Un spectacle à découvrir',
+            duration=95,
+            created_in=2026,
+            location=cls.location,
+            bookable=True,
+        )
+
+    def test_export_requires_staff_access(self):
+        url = reverse('catalogue:shows-csv-export')
+        self.client.force_login(self.customer)
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('admin:login'), response.url)
+
+    def test_staff_can_download_utf8_csv(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('catalogue:shows-csv-export'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        self.assertEqual(
+            response['Content-Disposition'],
+            'attachment; filename="spectacles.csv"',
+        )
+        self.assertTrue(response.content.startswith(b'\xef\xbb\xbf'))
+
+    def test_export_contains_header_and_show_data(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('catalogue:shows-csv-export'))
+        content = response.content.decode('utf-8-sig')
+        rows = list(csv.DictReader(StringIO(content)))
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0], {
+            'slug': 'opera-accentue',
+            'title': 'Opéra accentué',
+            'description': 'Un spectacle à découvrir',
+            'duration': '95',
+            'created_in': '2026',
+            'location_slug': self.location.slug,
+            'bookable': '1',
+        })
+
+    def csv_upload(self, rows):
+        header = 'slug,title,description,duration,created_in,location_slug,bookable\n'
+        content = header + '\n'.join(rows) + '\n'
+        return SimpleUploadedFile(
+            'spectacles.csv',
+            content.encode('utf-8'),
+            content_type='text/csv',
+        )
+
+    def test_import_requires_staff_access(self):
+        self.client.force_login(self.customer)
+
+        response = self.client.get(reverse('catalogue:shows-csv-import'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('admin:login'), response.url)
+
+    def test_import_creates_new_show(self):
+        self.client.force_login(self.staff)
+        upload = self.csv_upload([
+            'nouveau-show,Nouveau spectacle,Description,80,2027,palais-beaux-arts,oui',
+        ])
+
+        response = self.client.post(
+            reverse('catalogue:shows-csv-import'),
+            {'csv_file': upload},
+            follow=True,
+        )
+
+        self.assertContains(response, '1 spectacle(s) créé(s), 0 spectacle(s) mis à jour')
+        show = Show.objects.get(slug='nouveau-show')
+        self.assertEqual(show.title, 'Nouveau spectacle')
+        self.assertEqual(show.duration, 80)
+        self.assertEqual(show.created_in, 2027)
+        self.assertEqual(show.location, self.location)
+        self.assertTrue(show.bookable)
+
+    def test_import_updates_existing_show_by_slug(self):
+        self.client.force_login(self.staff)
+        upload = self.csv_upload([
+            'opera-accentue,Opéra mis à jour,Nouveau texte,110,2028,,0',
+        ])
+
+        response = self.client.post(
+            reverse('catalogue:shows-csv-import'),
+            {'csv_file': upload},
+            follow=True,
+        )
+
+        self.assertContains(response, '0 spectacle(s) créé(s), 1 spectacle(s) mis à jour')
+        show = Show.objects.get(slug='opera-accentue')
+        self.assertEqual(show.title, 'Opéra mis à jour')
+        self.assertEqual(show.duration, 110)
+        self.assertEqual(show.created_in, 2028)
+        self.assertIsNone(show.location)
+        self.assertFalse(show.bookable)
+
+    def test_invalid_row_prevents_entire_import(self):
+        self.client.force_login(self.staff)
+        upload = self.csv_upload([
+            'ligne-valide,Ligne valide,,75,2027,palais-beaux-arts,1',
+            'ligne-invalide,Ligne invalide,,90,2027,lieu-inexistant,1',
+        ])
+
+        response = self.client.post(
+            reverse('catalogue:shows-csv-import'),
+            {'csv_file': upload},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'le lieu lieu-inexistant n’existe pas')
+        self.assertFalse(Show.objects.filter(slug='ligne-valide').exists())
+        self.assertFalse(Show.objects.filter(slug='ligne-invalide').exists())

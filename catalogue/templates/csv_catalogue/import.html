@@ -1,0 +1,28 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <p>Le fichier doit être encodé en UTF-8 et utiliser exactement ces colonnes :</p>
+    <pre>{{ csv_fields|join:',' }}</pre>
+
+    <p>
+        Les valeurs acceptées pour <code>bookable</code> sont
+        <code>1/0</code>, <code>true/false</code> ou <code>oui/non</code>.
+        Le lieu peut rester vide ou correspondre au slug d'un lieu existant.
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Importer</button>
+    </form>
+
+    <nav>
+        <a href="{% url 'catalogue:shows-csv-export' %}">
+            Télécharger un exemple avec les données actuelles
+        </a>
+    </nav>
+{% endblock %}

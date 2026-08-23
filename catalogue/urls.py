@@ -10,6 +10,16 @@ app_name='catalogue'
 
 urlpatterns = [
     path(
+        'csv/shows/export/',
+        views.csv_catalogue.export_shows,
+        name='shows-csv-export',
+    ),
+    path(
+        'csv/shows/import/',
+        views.csv_catalogue.import_shows,
+        name='shows-csv-import',
+    ),
+    path(
         'rss/representations/',
         UpcomingRepresentationsFeed(),
         name='representations-rss',
