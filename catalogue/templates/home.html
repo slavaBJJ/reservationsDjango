@@ -1,5 +1,44 @@
 {% extends "layouts/base.html" %}
 {% block title %}Accueil{% endblock %}
 {% block content %}
-<h2>Projet Réservations - Accueil</h2>
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <p class="hero-eyebrow">Votre prochaine émotion est ici</p>
+                <h1>Le spectacle vivant,<br><span>simplement réservé.</span></h1>
+                <p class="hero-lead">Explorez la programmation, choisissez votre représentation et réservez votre place en quelques instants.</p>
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <a class="btn btn-primary btn-lg" href="{% url 'catalogue:show-index' %}">Découvrir les spectacles</a>
+                    <a class="btn btn-outline-light btn-lg" href="{% url 'catalogue:representation-index' %}">Voir les prochaines dates</a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block" aria-hidden="true">
+                <div class="stage-visual"><span class="stage-light stage-light-left"></span><span class="stage-light stage-light-right"></span><span class="stage-orbit">À<br>l'affiche</span></div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="home-features py-5" aria-labelledby="features-title">
+    <div class="container py-lg-4">
+        <div class="section-heading text-center mx-auto mb-5"><p class="section-kicker">Une sortie sans complications</p><h2 id="features-title">De la découverte au lever de rideau</h2></div>
+        <div class="row g-4">
+            <div class="col-md-4"><article class="feature-card h-100"><span class="feature-number">01</span><h3>Explorez</h3><p>Recherchez et filtrez le catalogue pour trouver le spectacle qui vous ressemble.</p></article></div>
+            <div class="col-md-4"><article class="feature-card h-100"><span class="feature-number">02</span><h3>Réservez</h3><p>Choisissez une date et retrouvez toutes vos réservations dans votre espace personnel.</p></article></div>
+            <div class="col-md-4"><article class="feature-card h-100"><span class="feature-number">03</span><h3>Partagez</h3><p>Après la représentation, donnez votre avis et faites vivre la communauté.</p></article></div>
+        </div>
+    </div>
+</section>
+<section class="home-cta">
+    <div class="container">
+        <div class="cta-panel d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4">
+            <div>
+                {% if request.user.is_authenticated %}<p class="section-kicker mb-2">Votre espace</p><h2 class="mb-2">Content de vous revoir, {{ request.user.username }}.</h2><p class="mb-0">Vos prochaines sorties sont accessibles à tout moment.</p>
+                {% else %}<p class="section-kicker mb-2">Rejoignez la communauté</p><h2 class="mb-2">Prêt pour votre prochaine sortie ?</h2><p class="mb-0">Créez gratuitement votre compte et commencez à réserver.</p>{% endif %}
+            </div>
+            {% if request.user.is_authenticated %}<a class="btn btn-primary btn-lg flex-shrink-0" href="{% url 'catalogue:reservation-index' %}">Mes réservations</a>
+            {% else %}<a class="btn btn-primary btn-lg flex-shrink-0" href="{% url 'accounts:user-signup' %}">Créer mon compte</a>{% endif %}
+        </div>
+    </div>
+</section>
 {% endblock %}

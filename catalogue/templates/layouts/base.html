@@ -1,89 +1,95 @@
-<!DOCTYPE html>
-<html lang="fr">
+{% load static %}
+<!doctype html>
+<html lang="fr" data-bs-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <title>Projet réservations -{% block title %}Bienvenue{% endblock %}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Découvrez les spectacles et réservez vos prochaines sorties culturelles.">
+    <title>{% block title %}Bienvenue{% endblock %} | Scène ouverte</title>
+    <script>
+        (() => {
+            const savedTheme = localStorage.getItem('reservation-theme');
+            const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.dataset.bsTheme = savedTheme || preferredTheme;
+        })();
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'catalogue/css/app.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
-<body>
-<div class="container"></div>
+<body class="d-flex flex-column min-vh-100">
+    <a class="skip-link" href="#main-content">Aller au contenu</a>
     <header>
-        <div style="float:right">
-            {% if request.user.is_authenticated %}
-            <p>Bnjour {{ request.user.username }}!</p>
-            <p><a href="{% url 'accounts:user-profile' %}">Mon profil</a></p>
-            <p><a href="{% url 'catalogue:reservation-index' %}">Mes réservations</a></p>
-            {% if request.user.is_staff %}
-                <p>
-                    <a href="{% url 'catalogue:shows-csv-export' %}">
-                        Exporter les spectacles en CSV
-                    </a>
-                    —
-                    <a href="{% url 'catalogue:shows-csv-import' %}">
-                        Importer des spectacles en CSV
-                    </a>
-                </p>
-                <p>
-                    <a href="{% url 'catalogue:press-review-moderation' %}">
-                        Modérer les critiques de presse
-                    </a>
-                </p>
-            {% endif %}
-            {% if can_moderate_reviews %}
-                <p>
-                    <a href="{% url 'catalogue:review-moderation' %}">
-                        Modérer les avis
-                    </a>
-                </p>
-            {% endif %}
-            {% for group in request.user.groups.all %}
-                {% if group.name == 'CRITIC' %}
-                    <p>
-                        <a href="{% url 'catalogue:press-review-index' %}">
-                            Mes critiques de presse
-                        </a>
-                    </p>
-                {% elif group.name == 'PRODUCER' and not request.user.is_staff %}
-                    <p>
-                        <a href="{% url 'catalogue:press-review-moderation' %}">
-                            Modérer les critiques de presse
-                        </a>
-                    </p>
-                {% endif %}
-            {% endfor %}
-
-            <form action = "{% url 'logout' %}" method ="post">
-                {%csrf_token%}
-                <button type="submit">Se déconnecter</button>
-            </form>
-
-            {% else %}
-            <p>Vous n'êtes pas connecté.</p>
-
-            <p><a href="{% url 'login' %}">Se connecter</a></p>
-            <p><a href="{% url 'accounts:user-signup' %}">S'inscrire</a></p>
-
-            {%endif%}
-        </div>
+        <nav class="navbar navbar-expand-lg app-navbar" aria-label="Navigation principale">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <span class="brand-mark" aria-hidden="true">S</span><span>Scène ouverte</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Afficher la navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavigation">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Accueil</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'catalogue:show-index' %}">Spectacles</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'catalogue:representation-index' %}">Représentations</a></li>
+                    </ul>
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2">
+                        <button class="btn theme-toggle" type="button" data-theme-toggle aria-label="Activer le thème sombre">
+                            <span data-theme-icon aria-hidden="true">☾</span> <span data-theme-label>Thème sombre</span>
+                        </button>
+                        {% if request.user.is_authenticated %}
+                            <div class="dropdown">
+                                <button class="btn btn-account dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">{{ request.user.username }}</button>
+                                <ul class="dropdown-menu dropdown-menu-lg-end shadow-sm">
+                                    <li><a class="dropdown-item" href="{% url 'accounts:user-profile' %}">Mon profil</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'catalogue:reservation-index' %}">Mes réservations</a></li>
+                                    {% if can_moderate_reviews %}<li><a class="dropdown-item" href="{% url 'catalogue:review-moderation' %}">Modérer les avis</a></li>{% endif %}
+                                    {% for group in request.user.groups.all %}
+                                        {% if group.name == 'CRITIC' %}
+                                            <li><a class="dropdown-item" href="{% url 'catalogue:press-review-index' %}">Mes critiques de presse</a></li>
+                                        {% elif group.name == 'PRODUCER' and not request.user.is_staff %}
+                                            <li><a class="dropdown-item" href="{% url 'catalogue:press-review-moderation' %}">Modérer les critiques de presse</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if request.user.is_staff %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h2 class="dropdown-header fs-6">Administration</h2></li>
+                                        <li><a class="dropdown-item" href="{% url 'catalogue:press-review-moderation' %}">Modérer les critiques</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'catalogue:shows-csv-import' %}">Importer le catalogue</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'catalogue:shows-csv-export' %}">Exporter le catalogue</a></li>
+                                    {% endif %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item" type="submit">Se déconnecter</button></form></li>
+                                </ul>
+                            </div>
+                        {% else %}
+                            <a class="btn btn-link nav-login" href="{% url 'login' %}">Se connecter</a>
+                            <a class="btn btn-primary" href="{% url 'accounts:user-signup' %}">S'inscrire</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
     </header>
-    <div id="messages">
-        {% if messages %}
-        <ul class="messages">
+    {% if messages %}
+        <div class="container pt-3" aria-live="polite" aria-atomic="true">
             {% for message in messages %}
-            <li {% if message.tags %} class="{{message.tags}}"
-                {%endif %}>{{message}}</li>
-            {%endfor%}
-        </ul>
-        {%endif%}
-    </div>
-    {% block content %}{% endblock %}
-
-    <footer>
-        <p>
-            <a href="{% url 'catalogue:representations-rss' %}">
-                Flux RSS des prochaines représentations
-            </a>
-        </p>
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <main id="main-content" class="flex-grow-1">{% block content %}{% endblock %}</main>
+    <footer class="app-footer mt-auto">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div><a class="footer-brand" href="{% url 'home' %}">Scène ouverte</a><p class="mb-0 mt-1">La culture à portée de réservation.</p></div>
+            <a class="footer-link" href="{% url 'catalogue:representations-rss' %}">Flux RSS des prochaines représentations</a>
+        </div>
     </footer>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="{% static 'catalogue/js/theme.js' %}"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

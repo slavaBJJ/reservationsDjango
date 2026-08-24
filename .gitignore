@@ -5,3 +5,8 @@ __pycache__/
 
 # Local project notes
 roadmap.txt
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
