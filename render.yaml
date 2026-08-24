@@ -1,0 +1,34 @@
+databases:
+  - name: reservations-db
+    plan: free
+    databaseName: reservations
+    user: reservations
+
+services:
+  - type: web
+    name: reservations-django
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn reservations.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: reservations-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_LANGUAGE_CODE
+        value: fr-be
+      - key: DJANGO_TIME_ZONE
+        value: Europe/Brussels
+      - key: DJANGO_CSRF_COOKIE_SECURE
+        value: "True"
+      - key: DJANGO_SESSION_COOKIE_SECURE
+        value: "True"
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: "True"
+      - key: DJANGO_SECURE_PROXY_SSL_HEADER
+        value: "True"

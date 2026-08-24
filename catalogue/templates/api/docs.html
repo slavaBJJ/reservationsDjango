@@ -1,0 +1,5 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Documentation API{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">{% endblock %}
+{% block content %}<section class="resource-heading"><div class="container"><p class="section-kicker">Développeurs</p><h1>Documentation de l’API</h1><p>Authentification JWT, endpoints HATEOAS et catalogue réservé aux affiliés.</p></div></section><div id="swagger-ui" class="container py-4"><noscript><p>JavaScript est nécessaire pour afficher Swagger UI.</p></noscript><p><a href="{% url 'catalogue:api-schema' %}">Télécharger le schéma OpenAPI JSON</a></p></div>{% endblock %}
+{% block extra_js %}<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script><script>SwaggerUIBundle({url: "{% url 'catalogue:api-schema' %}", dom_id: '#swagger-ui', deepLinking: true, persistAuthorization: true});</script>{% endblock %}

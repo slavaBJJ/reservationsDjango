@@ -1,10 +1,13 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from catalogue.models import Artist, Locality, Location, Show
+from catalogue.models import Artist, Locality, Location, Price, Representation, Show
 from catalogue.roles import (
     ROLE_AFFILIATE_FREE,
     ROLE_AFFILIATE_PREMIUM,
@@ -143,8 +146,9 @@ class ShowAffiliateAPITests(APITestCase):
             locality=locality,
         )
 
+        price = Price.objects.create(type='API', price='20.00')
         for index in range(30):
-            Show.objects.create(
+            show = Show.objects.create(
                 slug=f'api-show-{index:02d}',
                 title=f'Spectacle API {index:02d}',
                 description='Description recherchable',
@@ -153,6 +157,13 @@ class ShowAffiliateAPITests(APITestCase):
                 location=cls.location if index else cls.other_location,
                 bookable=(index % 2 == 0),
             )
+            if index % 2 == 0:
+                show.prices.add(price)
+                Representation.objects.create(
+                    show=show,
+                    schedule=timezone.now() + timedelta(days=index + 1),
+                    location=show.location,
+                )
 
     def test_non_affiliate_cannot_read_show_api(self):
         self.client.force_authenticate(user=self.member)
@@ -196,14 +207,14 @@ class ShowAffiliateAPITests(APITestCase):
         response = self.client.get(reverse('catalogue:show-api-list'), {
             'q': 'Spectacle API',
             'location': self.location.slug,
-            'bookable': 'true',
+            'reservable': 'true',
             'ordering': '-duration',
         })
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data['results']
         self.assertTrue(results)
-        self.assertTrue(all(result['bookable'] for result in results))
+        self.assertTrue(all(result['reservable'] for result in results))
         self.assertTrue(all(result['location'] == self.location.pk for result in results))
         durations = [result['duration'] for result in results]
         self.assertEqual(durations, sorted(durations, reverse=True))

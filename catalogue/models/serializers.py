@@ -34,6 +34,7 @@ class ShowSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     minimum_price = serializers.SerializerMethodField()
+    reservable = serializers.BooleanField(source='is_reservable', read_only=True)
     links = serializers.SerializerMethodField()
 
     class Meta:
@@ -48,6 +49,7 @@ class ShowSerializer(serializers.ModelSerializer):
             'location',
             'location_name',
             'bookable',
+            'reservable',
             'minimum_price',
             'links',
         ]

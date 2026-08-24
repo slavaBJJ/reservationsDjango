@@ -8,6 +8,7 @@ from api.catalogue.views import (
     ShowListCreateView,
     ShowRetrieveUpdateDestroyView,
 )
+from api.catalogue import documentation as api_documentation
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .feeds import UpcomingRepresentationsFeed
 
@@ -73,6 +74,8 @@ urlpatterns = [
         ShowRetrieveUpdateDestroyView.as_view(),
         name='show-api-detail',
     ),
+    path('api/schema/', api_documentation.schema, name='api-schema'),
+    path('api/docs/', api_documentation.docs, name='api-docs'),
     path('locality/', views.locality.index, name='locality-index'),
     path('locality/create', views.locality.create, name='locality-create'),
     path('locality/<int:locality_id>', views.locality.show, name='locality-show'),

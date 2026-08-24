@@ -1,6 +1,7 @@
-from django.db.models import Min, Q
+from django.db.models import BooleanField, Case, Exists, Min, OuterRef, Q, Value, When
+from django.utils import timezone
 
-from catalogue.models import Artist, Show
+from catalogue.models import Artist, Price, Representation, Show
 from catalogue.models.serializers import ArtistSerializer, ShowSerializer
 from rest_framework import generics
 from rest_framework.permissions import DjangoModelPermissions
@@ -23,6 +24,22 @@ class ShowQuerysetMixin:
     def base_queryset(self):
         return Show.objects.select_related('location').annotate(
             min_price=Min('prices__price'),
+            has_upcoming_representation=Exists(Representation.objects.filter(
+                show_id=OuterRef('pk'),
+                schedule__gt=timezone.now(),
+            )),
+            has_available_price=Exists(Price.objects.filter(shows=OuterRef('pk'))),
+        ).annotate(
+            is_reservable=Case(
+                When(
+                    bookable=True,
+                    has_upcoming_representation=True,
+                    has_available_price=True,
+                    then=Value(True),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
         )
 
 
@@ -35,7 +52,10 @@ class ShowListCreateView(ShowQuerysetMixin, generics.ListCreateAPIView):
         queryset = self.base_queryset()
         search = self.request.query_params.get('q', '').strip()
         location = self.request.query_params.get('location', '').strip()
-        bookable = self.request.query_params.get('bookable', '').lower()
+        reservable = self.request.query_params.get(
+            'reservable',
+            self.request.query_params.get('bookable', ''),
+        ).lower()
         ordering = self.request.query_params.get('ordering', 'title')
 
         if search:
@@ -45,10 +65,10 @@ class ShowListCreateView(ShowQuerysetMixin, generics.ListCreateAPIView):
             )
         if location:
             queryset = queryset.filter(location__slug=location)
-        if bookable in {'1', 'true', 'yes', 'oui'}:
-            queryset = queryset.filter(bookable=True)
-        elif bookable in {'0', 'false', 'no', 'non'}:
-            queryset = queryset.filter(bookable=False)
+        if reservable in {'1', 'true', 'yes', 'oui'}:
+            queryset = queryset.filter(is_reservable=True)
+        elif reservable in {'0', 'false', 'no', 'non'}:
+            queryset = queryset.filter(is_reservable=False)
 
         ordering_fields = {
             'title': ('title', 'pk'),
@@ -59,6 +79,8 @@ class ShowListCreateView(ShowQuerysetMixin, generics.ListCreateAPIView):
             '-duration': ('-duration', 'title', 'pk'),
             'price': ('min_price', 'title', 'pk'),
             '-price': ('-min_price', 'title', 'pk'),
+            'availability': ('is_reservable', 'title', 'pk'),
+            '-availability': ('-is_reservable', 'title', 'pk'),
         }
         return queryset.order_by(*ordering_fields.get(ordering, ('title', 'pk')))
 
