@@ -1,13 +1,3 @@
-{% block title %}Liste des taris{% endblock %}
-
-{% block content %}
-    <h1>{{ title }}</h1>
-    <ul>
-    {% for price in prices %}
-        <li>
-            <a href="{% url 'catalogue:price-show' price.id %}">{{ price.type }}</a>
-             : {{ price.price|floatformat:2 }} €
-        </li>
-    {% endfor %}
-    </ul>
-{% endblock %}
+{% extends 'layouts/base.html' %}
+{% block title %}Tarifs{% endblock %}
+{% block content %}<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Catalogue</p><h1>Tarifs</h1><p>Consultez les formules proposées pour les spectacles.</p></div>{% if perms.catalogue.add_price %}<a class="btn btn-primary" href="{% url 'catalogue:price-create' %}">Ajouter un tarif</a>{% endif %}</div></section><section class="resource-section py-5"><div class="container"><div class="resource-grid">{% for price in prices %}<a class="resource-card" href="{% url 'catalogue:price-show' price.id %}"><span class="resource-avatar">€</span><span><strong>{{ price.type|default:'Tarif' }}</strong><small>{{ price.price|floatformat:2 }} € · {{ price.shows.count }} spectacle{{ price.shows.count|pluralize }}</small></span><span aria-hidden="true">→</span></a>{% empty %}<div class="catalogue-empty"><h2>Aucun tarif</h2><p>Ajoutez une première formule tarifaire.</p></div>{% endfor %}</div></div></section>{% endblock %}

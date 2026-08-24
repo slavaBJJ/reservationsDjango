@@ -7,7 +7,7 @@
         <p class="section-kicker">À l’affiche</p>
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
             <div><h1>Découvrez nos spectacles</h1><p class="mb-0">Théâtre, musique, danse et créations : trouvez votre prochaine sortie.</p></div>
-            <p class="catalogue-count mb-0"><strong>{{ shows.paginator.count }}</strong> spectacle{{ shows.paginator.count|pluralize }}</p>
+            <div class="d-flex align-items-center gap-3">{% if can_add_show %}<a class="btn btn-light" href="{% url 'catalogue:show-create' %}">Ajouter un spectacle</a>{% endif %}<p class="catalogue-count mb-0"><strong>{{ shows.paginator.count }}</strong> spectacle{{ shows.paginator.count|pluralize }}</p></div>
         </div>
     </div>
 </section>
@@ -60,7 +60,7 @@
                         </a>
                         <div class="show-card-body">
                             <div class="d-flex justify-content-between align-items-start gap-2">
-                                {% if show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
+                                {% if show.is_reservable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
                                 {% if show.duration %}<span class="show-duration">{{ show.duration }} min</span>{% endif %}
                             </div>
                             <h2><a href="{% url 'catalogue:show-show' show.id %}">{{ show.title }}</a></h2>

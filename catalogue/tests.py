@@ -3,13 +3,14 @@ from datetime import timedelta
 from decimal import Decimal
 from io import StringIO
 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from catalogue.models import (
+    Artist,
     Locality,
     Location,
     PressReview,
@@ -19,6 +20,7 @@ from catalogue.models import (
     Reservation,
     Review,
     Show,
+    Type,
 )
 from catalogue.roles import (
     ROLE_CRITIC,
@@ -28,6 +30,146 @@ from catalogue.roles import (
     is_producer_for,
 )
 from accounts.forms import UserSignUpForm
+
+
+class ArtistCrudPermissionTests(TestCase):
+    def setUp(self):
+        self.artist = Artist.objects.create(firstname='Alice', lastname='Martin')
+        self.manager = User.objects.create_user(username='catalogue-manager')
+
+    def grant(self, codename):
+        permission = Permission.objects.get(
+            content_type__app_label='catalogue',
+            codename=codename,
+        )
+        self.manager.user_permissions.add(permission)
+
+    def test_artist_list_and_detail_are_public(self):
+        list_response = self.client.get(reverse('catalogue:artist-index'))
+        detail_response = self.client.get(
+            reverse('catalogue:artist-show', args=[self.artist.pk]),
+        )
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertNotContains(list_response, 'Ajouter un artiste')
+        self.assertNotContains(detail_response, 'Modifier l’artiste')
+
+    def test_anonymous_user_cannot_access_write_views(self):
+        requests = (
+            ('get', reverse('catalogue:artist-create')),
+            ('get', reverse('catalogue:artist-edit', args=[self.artist.pk])),
+            ('post', reverse('catalogue:artist-delete', args=[self.artist.pk])),
+        )
+        for method, url in requests:
+            with self.subTest(url=url):
+                response = getattr(self.client, method)(url)
+                self.assertEqual(response.status_code, 403)
+
+    def test_add_permission_allows_artist_creation(self):
+        self.grant('add_artist')
+        self.client.force_login(self.manager)
+
+        response = self.client.post(reverse('catalogue:artist-create'), {
+            'firstname': 'Benoît',
+            'lastname': 'Durand',
+        })
+
+        artist = Artist.objects.get(firstname='Benoît', lastname='Durand')
+        self.assertRedirects(
+            response,
+            reverse('catalogue:artist-show', args=[artist.pk]),
+        )
+
+    def test_change_permission_allows_artist_update(self):
+        self.grant('change_artist')
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse('catalogue:artist-edit', args=[self.artist.pk]),
+            {'firstname': 'Alice', 'lastname': 'Bernard'},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse('catalogue:artist-show', args=[self.artist.pk]),
+        )
+        self.artist.refresh_from_db()
+        self.assertEqual(self.artist.lastname, 'Bernard')
+
+    def test_delete_permission_allows_artist_deletion(self):
+        self.grant('delete_artist')
+        self.client.force_login(self.manager)
+
+        response = self.client.post(
+            reverse('catalogue:artist-delete', args=[self.artist.pk]),
+        )
+
+        self.assertRedirects(response, reverse('catalogue:artist-index'))
+        self.assertFalse(Artist.objects.filter(pk=self.artist.pk).exists())
+
+
+class TypeCrudPermissionTests(TestCase):
+    def setUp(self):
+        self.type_obj = Type.objects.create(type='Scénographe')
+        self.manager = User.objects.create_user(username='type-manager')
+
+    def grant(self, codename):
+        self.manager.user_permissions.add(Permission.objects.get(
+            content_type__app_label='catalogue',
+            codename=codename,
+        ))
+
+    def test_type_list_and_detail_are_public(self):
+        self.assertEqual(
+            self.client.get(reverse('catalogue:type-index')).status_code,
+            200,
+        )
+        response = self.client.get(
+            reverse('catalogue:type-show', args=[self.type_obj.pk]),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Modifier le type')
+
+    def test_anonymous_user_cannot_access_type_write_views(self):
+        requests = (
+            ('get', reverse('catalogue:type-create')),
+            ('get', reverse('catalogue:type-edit', args=[self.type_obj.pk])),
+            ('post', reverse('catalogue:type-delete', args=[self.type_obj.pk])),
+        )
+        for method, url in requests:
+            with self.subTest(url=url):
+                self.assertEqual(getattr(self.client, method)(url).status_code, 403)
+
+    def test_permissions_allow_type_create_update_and_delete(self):
+        for codename in ('add_type', 'change_type', 'delete_type'):
+            self.grant(codename)
+        self.client.force_login(self.manager)
+
+        create_response = self.client.post(
+            reverse('catalogue:type-create'),
+            {'type': 'Metteur en scène'},
+        )
+        created = Type.objects.get(type='Metteur en scène')
+        self.assertRedirects(
+            create_response,
+            reverse('catalogue:type-show', args=[created.pk]),
+        )
+
+        update_response = self.client.post(
+            reverse('catalogue:type-edit', args=[created.pk]),
+            {'type': 'Mise en scène'},
+        )
+        self.assertRedirects(
+            update_response,
+            reverse('catalogue:type-show', args=[created.pk]),
+        )
+
+        delete_response = self.client.post(
+            reverse('catalogue:type-delete', args=[created.pk]),
+        )
+        self.assertRedirects(delete_response, reverse('catalogue:type-index'))
+        self.assertFalse(Type.objects.filter(pk=created.pk).exists())
 
 
 class BusinessRoleTests(TestCase):

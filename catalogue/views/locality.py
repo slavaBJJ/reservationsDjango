@@ -1,29 +1,62 @@
-from django.shortcuts import render
-from django.http import Http404
+from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.db.models.deletion import RestrictedError
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
+from catalogue.forms import LocalityForm
 from catalogue.models import Locality
 
 
-# Create your views here.
 def index(request):
-    localities = Locality.objects.all()
-    title = 'Liste des localités'
-
-    return render(request, 'locality/index.html', {
-        'localities': localities,
-        'title': title
-    })
+    localities = Locality.objects.order_by('postal_code', 'locality', 'pk')
+    return render(request, 'locality/index.html', {'localities': localities})
 
 
 def show(request, locality_id):
+    locality = get_object_or_404(
+        Locality.objects.prefetch_related('locations'),
+        id=locality_id,
+    )
+    return render(request, 'locality/show.html', {'locality': locality})
+
+
+@permission_required('catalogue.add_locality', raise_exception=True)
+def create(request):
+    form = LocalityForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        locality = form.save()
+        messages.success(request, 'Localité créée avec succès.')
+        return redirect('catalogue:locality-show', locality_id=locality.pk)
+    return render(request, 'locality/create.html', {'form': form})
+
+
+@permission_required('catalogue.change_locality', raise_exception=True)
+def edit(request, locality_id):
+    locality = get_object_or_404(Locality, id=locality_id)
+    form = LocalityForm(request.POST or None, instance=locality)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Localité modifiée avec succès.')
+        return redirect('catalogue:locality-show', locality_id=locality.pk)
+    return render(
+        request,
+        'locality/edit.html',
+        {'form': form, 'locality': locality},
+    )
+
+
+@permission_required('catalogue.delete_locality', raise_exception=True)
+@require_POST
+def delete(request, locality_id):
+    locality = get_object_or_404(Locality, id=locality_id)
     try:
-        locality = Locality.objects.get(id=locality_id)
-    except Locality.DoesNotExist:
-        raise Http404('Localité inexistante');
-
-    title = 'Fiche d\'une localité'
-
-    return render(request, 'locality/show.html', {
-        'locality': locality,
-        'title': title
-    })
+        locality.delete()
+    except RestrictedError:
+        messages.error(
+            request,
+            'Cette localité ne peut pas être supprimée car elle contient des lieux.',
+        )
+        return redirect('catalogue:locality-show', locality_id=locality.pk)
+    messages.success(request, 'Localité supprimée avec succès.')
+    return redirect('catalogue:locality-index')

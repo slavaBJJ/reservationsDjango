@@ -1,12 +1,8 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ price.type|default:'Tarif' }}{% endblock %}
 
 {% block content %}
-    <h1>Tarif {{ price.type|title }}</h1>
-    <p>{{ price.description }}</p>
-    <p>{{ price.price }} €</p>
-    <p>Validité : du {{ price.start_date }} au {{ price.end_date }}</p>
-
-    <nav><a href="{% url 'catalogue:price-index' %}">Retour à l'index</a></nav>
+    <section class="resource-heading"><div class="container"><nav class="page-back"><a href="{% url 'catalogue:price-index' %}">← Tous les tarifs</a></nav><p class="section-kicker">Tarif</p><h1>{{ price.type|default:'Tarif standard' }}</h1><p>{{ price.description|default:'Aucune description.' }}</p></div></section>
+    <section class="resource-section py-5"><div class="container"><div class="auth-card mx-auto"><p class="display-5 fw-bold">{{ price.price|floatformat:2 }} €</p><p>Depuis le {{ price.start_date|date:'d/m/Y' }}{% if price.end_date %} jusqu’au {{ price.end_date|date:'d/m/Y' }}{% endif %}</p><h2 class="h4 mt-4">Spectacles associés</h2><ul>{% for show in price.shows.all %}<li><a href="{% url 'catalogue:show-show' show.id %}">{{ show.title }}</a></li>{% empty %}<li>Aucun spectacle associé.</li>{% endfor %}</ul>{% if perms.catalogue.change_price %}<a class="btn btn-outline-secondary" href="{% url 'catalogue:price-edit' price.id %}">Modifier</a>{% endif %}{% if perms.catalogue.delete_price %}<form class="d-inline" method="post" action="{% url 'catalogue:price-delete' price.id %}" onsubmit="return confirm('Supprimer définitivement ce tarif ?');">{% csrf_token %}<button class="btn btn-outline-danger" type="submit">Supprimer</button></form>{% endif %}</div></div></section>
 {% endblock %}

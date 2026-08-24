@@ -57,9 +57,11 @@
                                         <li><hr class="dropdown-divider"></li>
                                         <li><h2 class="dropdown-header fs-6">Administration</h2></li>
                                         <li><a class="dropdown-item" href="{% url 'catalogue:press-review-moderation' %}">Modérer les critiques</a></li>
+                                        <li><a class="dropdown-item" href="{% url 'catalogue:price-index' %}">Gérer les tarifs</a></li>
                                         <li><a class="dropdown-item" href="{% url 'catalogue:shows-csv-import' %}">Importer le catalogue</a></li>
                                         <li><a class="dropdown-item" href="{% url 'catalogue:shows-csv-export' %}">Exporter le catalogue</a></li>
                                     {% endif %}
+                                    {% if request.user.is_superuser %}<li><a class="dropdown-item" href="{% url 'accounts:role-index' %}">Gérer les rôles</a></li>{% endif %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item" type="submit">Se déconnecter</button></form></li>
                                 </ul>

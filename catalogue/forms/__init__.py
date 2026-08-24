@@ -2,3 +2,9 @@ from .ArtistForm import *
 from .ReservationForm import *
 from .ReviewForm import *
 from .PressReviewForm import *
+from .TypeForm import *
+from .LocalityForm import *
+from .LocationForm import *
+from .PriceForm import *
+from .RepresentationForm import *
+from .ShowForm import *

@@ -2,10 +2,10 @@ from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from .forms import UserSignUpForm
-from .forms import UserUpdateForm
+from .forms import RoleAssignmentForm, UserUpdateForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import logout
@@ -16,6 +16,10 @@ from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
+from django.db.models import Q
+from catalogue.roles import BUSINESS_ROLES
 
 
 @require_GET
@@ -123,3 +127,53 @@ def delete(request, pk):
             return redirect('home')
         messages.error(request, "Suppression interdite (méthode incorrecte)!")
         return redirect('home')
+
+
+@login_required
+def role_index(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+    search = request.GET.get('q', '').strip()
+    users = User.objects.prefetch_related('groups').order_by('username', 'pk')
+    if search:
+        users = users.filter(
+            Q(username__icontains=search)
+            | Q(first_name__icontains=search)
+            | Q(last_name__icontains=search)
+            | Q(email__icontains=search)
+        )
+    page = Paginator(users, 20).get_page(request.GET.get('page'))
+    for managed_user in page:
+        managed_user.business_role_names = [
+            group.name
+            for group in managed_user.groups.all()
+            if group.name in BUSINESS_ROLES
+        ]
+    return render(request, 'roles/index.html', {
+        'users': page,
+        'search': search,
+    })
+
+
+@login_required
+def role_edit(request, user_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+    managed_user = get_object_or_404(User, id=user_id)
+    form = RoleAssignmentForm(
+        request.POST or None,
+        user=managed_user,
+    )
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(
+            request,
+            f'Rôles de {managed_user.username} mis à jour.',
+        )
+        return redirect('accounts:role-index')
+    return render(request, 'roles/edit.html', {
+        'form': form,
+        'managed_user': managed_user,
+    })

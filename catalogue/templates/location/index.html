@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Lieux de spectacle{% endblock %}
 {% block content %}
-<section class="resource-heading"><div class="container"><p class="section-kicker">Où sortir ?</p><h1>Lieux de spectacle</h1><p>Découvrez les scènes et salles qui accueillent la programmation.</p></div></section>
+<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Où sortir ?</p><h1>Lieux de spectacle</h1><p>Découvrez les scènes et salles qui accueillent la programmation.</p></div>{% if perms.catalogue.add_location %}<a class="btn btn-primary" href="{% url 'catalogue:location-create' %}">Ajouter un lieu</a>{% endif %}</div></section>
 <section class="resource-section py-5"><div class="container"><div class="venue-grid">{% for location in locations %}<article class="venue-card"><span class="venue-icon" aria-hidden="true">⌂</span><h2><a href="{% url 'catalogue:location-show' location.id %}">{{ location.designation }}</a></h2>{% if location.locality %}<p>{{ location.locality.postal_code }} {{ location.locality.locality }}</p>{% endif %}{% if location.website %}<a href="{{ location.website }}" target="_blank" rel="noopener noreferrer">Visiter le site ↗</a>{% endif %}</article>{% empty %}<div class="catalogue-empty"><h2>Aucun lieu</h2><p>Les lieux seront bientôt renseignés.</p></div>{% endfor %}</div></div></section>
 {% endblock %}

@@ -1,79 +1,50 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import Http404
 from django.contrib import messages
-from catalogue.models import Artist
+from django.contrib.auth.decorators import permission_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
 from catalogue.forms import ArtistForm
+from catalogue.models import Artist
+
 
 def index(request):
-    artists = Artist.objects.all()
-    print (artists)
-
-    return render(request, 'artist/index.html',{
-        'artists':artists,
-    })
-
-def show (request, artist_id):
-    try:
-        artist = Artist.objects.get(id=artist_id)
-    except Artist.DoesNotExist:
-        raise Http404('Artist inexistant')
-
-    return render(request,'artist/show.html',{'artist':artist})
+    artists = Artist.objects.order_by('lastname', 'firstname')
+    return render(request, 'artist/index.html', {'artists': artists})
 
 
+def show(request, artist_id):
+    artist = get_object_or_404(
+        Artist.objects.prefetch_related('a_artistTypes__type'),
+        id=artist_id,
+    )
+    return render(request, 'artist/show.html', {'artist': artist})
+
+
+@permission_required('catalogue.add_artist', raise_exception=True)
 def create(request):
     form = ArtistForm(request.POST or None)
-
-    if request.method =='POST':
-        if form.is_valid():
-            form.save()
-            messages.add_message(request, messages.SUCCESS, "Nouvel artist crée avec succès.")
-
-            return redirect('catalogue:artist-index')
-        else:
-            messages.add_message(request, messages.ERROR,"Echec de l'ajout d'un nouvel artiste ! ")
-    return render(request,'artist/create.html',{'form': form})
+    if request.method == 'POST' and form.is_valid():
+        artist = form.save()
+        messages.success(request, 'Nouvel artiste créé avec succès.')
+        return redirect('catalogue:artist-show', artist_id=artist.pk)
+    return render(request, 'artist/create.html', {'form': form})
 
 
-
+@permission_required('catalogue.change_artist', raise_exception=True)
 def edit(request, artist_id):
-    # fetch the object related to passed id
+    artist = get_object_or_404(Artist, id=artist_id)
+    form = ArtistForm(request.POST or None, instance=artist)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, 'Artiste modifié avec succès.')
+        return redirect('catalogue:artist-show', artist_id=artist.pk)
+    return render(request, 'artist/edit.html', {'form': form, 'artist': artist})
 
-    artist = Artist.objects.get(id=artist_id)
-    # pass the object as instance in form
 
-    form = ArtistForm(request.POST or None, instance = artist)
-
-    if request.method == 'POST':
-        method = request.POST.get('_method', '').upper()
-
-        if method == 'PUT':
-        # save the data from the form and
-        # redirect to detail_view
-            if form.is_valid():
-                form.save()
-                messages.success(request,"Artist modifié avec succès.")
-                return render(request, "artist/show.html", { 'artist' : artist,})
-            else:
-                messages.error(request,"Echec de la modification de l'artiste")
-    return render(request, 'artist/edit.html', { 'form' : form, 'artist' : artist, })
-
+@permission_required('catalogue.delete_artist', raise_exception=True)
+@require_POST
 def delete(request, artist_id):
     artist = get_object_or_404(Artist, id=artist_id)
-    print (artist)
-
-    if request.method=="POST":
-        method=request.POST.get('_method','').upper()
-
-        print(f"{method=}")
-
-        if method=="DELETE":
-            artist.delete()
-            messages.succes(request,"Artist supprimé avec succès ")
-
-            return redirect('catalogue:artist-index')
-    messages.error(request,"Echec de la supression de l'artiste ! ")
-    return render(request,'artist/show.html',{'artist':artist,})
-
-
-
+    artist.delete()
+    messages.success(request, 'Artiste supprimé avec succès.')
+    return redirect('catalogue:artist-index')

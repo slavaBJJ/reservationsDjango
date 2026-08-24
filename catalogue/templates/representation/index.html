@@ -8,7 +8,7 @@
             <article class="schedule-row">
                 <time datetime="{{ representation.schedule|date:'c' }}"><strong>{{ representation.schedule|date:'d' }}</strong><span>{{ representation.schedule|date:'M Y' }}</span><span>{{ representation.schedule|date:'H:i' }}</span></time>
                 <div class="schedule-info"><p>Représentation</p><h2>{{ representation.show.title }}</h2><span>{% if representation.location %}{{ representation.location.designation }}{% elif representation.show.location %}{{ representation.show.location.designation }}{% else %}Lieu à confirmer{% endif %}</span></div>
-                {% if representation.show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
+                {% if representation.is_reservable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
                 <a class="btn btn-outline-secondary" href="{% url 'catalogue:representation-show' representation.id %}">Voir la date</a>
             </article>
         {% empty %}<div class="catalogue-empty text-center"><span aria-hidden="true">◇</span><h2>Aucune représentation disponible</h2><p>Revenez bientôt pour découvrir les nouvelles dates.</p><a class="btn btn-primary" href="{% url 'catalogue:show-index' %}">Parcourir les spectacles</a></div>{% endfor %}

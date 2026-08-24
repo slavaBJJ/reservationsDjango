@@ -1,7 +1,7 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Artistes{% endblock %}
 {% block content %}
-<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Catalogue</p><h1>Les artistes</h1><p>Découvrez celles et ceux qui font vivre les spectacles.</p></div><a class="btn btn-primary" href="{% url 'catalogue:artist-create' %}">Ajouter un artiste</a></div></section>
+<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Catalogue</p><h1>Les artistes</h1><p>Découvrez celles et ceux qui font vivre les spectacles.</p></div>{% if perms.catalogue.add_artist %}<a class="btn btn-primary" href="{% url 'catalogue:artist-create' %}">Ajouter un artiste</a>{% endif %}</div></section>
 <section class="resource-section py-5"><div class="container"><div class="resource-grid">
     {% for artist in artists %}<a class="resource-card" href="{% url 'catalogue:artist-show' artist.id %}"><span class="resource-avatar">{{ artist.firstname|first|upper }}{{ artist.lastname|first|upper }}</span><span><strong>{{ artist.firstname }} {{ artist.lastname }}</strong><small>Voir la fiche</small></span><span aria-hidden="true">→</span></a>
     {% empty %}<div class="catalogue-empty"><h2>Aucun artiste</h2><p>Le catalogue des artistes est encore vide.</p></div>{% endfor %}

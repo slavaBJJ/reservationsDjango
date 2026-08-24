@@ -1,6 +1,6 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Localités{% endblock %}
 {% block content %}
-<section class="resource-heading"><div class="container"><p class="section-kicker">Près de chez vous</p><h1>Localités</h1><p>Parcourez les lieux culturels ville par ville.</p></div></section>
+<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Près de chez vous</p><h1>Localités</h1><p>Parcourez les lieux culturels ville par ville.</p></div>{% if perms.catalogue.add_locality %}<a class="btn btn-primary" href="{% url 'catalogue:locality-create' %}">Ajouter une localité</a>{% endif %}</div></section>
 <section class="resource-section py-5"><div class="container"><div class="locality-list">{% for locality in localities %}<a href="{% url 'catalogue:locality-show' locality.id %}"><span>{{ locality.postal_code }}</span><strong>{{ locality.locality }}</strong><span aria-hidden="true">→</span></a>{% empty %}<p>Aucune localité renseignée.</p>{% endfor %}</div></div></section>
 {% endblock %}

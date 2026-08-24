@@ -15,4 +15,6 @@ urlpatterns = [
     path('profile/',views.profile, name='user-profile'),
     path('profile/<int:pk>',UserUpdateView.as_view(), name='user-update' ),
     path('profile/delete/<int:pk>/', views.delete, name='user-delete'),
+    path('roles/', views.role_index, name='role-index'),
+    path('roles/<int:user_id>/', views.role_edit, name='role-edit'),
 ]

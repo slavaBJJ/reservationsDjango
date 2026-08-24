@@ -14,7 +14,7 @@
                     </div>
                 </div>
                 <div class="col-lg-7">
-                    {% if show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Non réservable</span>{% endif %}
+                    {% if is_reservable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Non réservable actuellement</span>{% endif %}
                     <h1>{{ show.title }}</h1>
                     {% if show.description %}<p class="detail-lead">{{ show.description }}</p>{% endif %}
                     <dl class="detail-facts">
@@ -22,7 +22,7 @@
                         {% if show.duration %}<div><dt>Durée</dt><dd>{{ show.duration }} minutes</dd></div>{% endif %}
                         <div><dt>Création</dt><dd>{{ show.created_in }}</dd></div>
                     </dl>
-                    {% if upcoming_representations and show.bookable %}<a class="btn btn-primary btn-lg" href="#representations">Choisir une représentation</a>{% endif %}
+                    <div class="d-flex flex-wrap gap-2">{% if is_reservable %}<a class="btn btn-primary btn-lg" href="#representations">Choisir une représentation</a>{% endif %}{% if can_manage_show %}<a class="btn btn-outline-secondary btn-lg" href="{% url 'catalogue:show-edit' show.id %}">Modifier</a>{% endif %}</div>
                 </div>
             </div>
         </div>
@@ -41,13 +41,13 @@
                 </section>
 
                 <section class="detail-section" id="representations" aria-labelledby="representations-title">
-                    <p class="section-kicker">Prochaines dates</p><h2 id="representations-title">Représentations</h2>
+                    <div class="d-flex justify-content-between align-items-end gap-3"><div><p class="section-kicker">Prochaines dates</p><h2 id="representations-title">Représentations</h2></div>{% if can_manage_show %}<a class="btn btn-outline-secondary" href="{% url 'catalogue:representation-create' show.id %}">Ajouter une date</a>{% endif %}</div>
                     <div class="representation-list">
                         {% for representation in upcoming_representations %}
                             <div class="representation-row">
                                 <time datetime="{{ representation.schedule|date:'c' }}"><strong>{{ representation.schedule|date:'d' }}</strong><span>{{ representation.schedule|date:'M Y' }}</span><span>{{ representation.schedule|date:'H:i' }}</span></time>
                                 <div><strong>{% if representation.location %}{{ representation.location.designation }}{% elif show.location %}{{ show.location.designation }}{% else %}Lieu à confirmer{% endif %}</strong></div>
-                                <a class="btn {% if show.bookable %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}" href="{% url 'catalogue:representation-show' representation.id %}">Voir la date</a>
+                                <a class="btn {% if show.bookable and has_prices %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}" href="{% url 'catalogue:representation-show' representation.id %}">Voir la date</a>
                             </div>
                         {% empty %}<div class="detail-empty"><p>Aucune représentation à venir n’est programmée pour le moment.</p></div>{% endfor %}
                     </div>
@@ -80,10 +80,11 @@
                 <div class="detail-sidebar">
                     <p class="section-kicker">Tarifs</p><h2>Choisissez votre formule</h2>
                     <ul class="price-list">{% for price in show.prices.all %}<li><span>{{ price.type }}</span><strong>{{ price.price }} €</strong></li>{% empty %}<li>Tarifs à confirmer.</li>{% endfor %}</ul>
-                    {% if upcoming_representations and show.bookable %}<a class="btn btn-primary w-100" href="#representations">Voir les dates</a>{% elif not show.bookable %}<p class="detail-note mb-0">Les réservations ne sont pas ouvertes.</p>{% endif %}
+                    {% if is_reservable %}<a class="btn btn-primary w-100" href="#representations">Voir les dates</a>{% elif not show.bookable %}<p class="detail-note mb-0">Les réservations ne sont pas ouvertes.</p>{% elif not upcoming_representations %}<p class="detail-note mb-0">Aucune représentation future n’est programmée.</p>{% elif not has_prices %}<p class="detail-note mb-0">Les tarifs ne sont pas encore disponibles.</p>{% endif %}
                 </div>
             </aside>
         </div>
     </div>
+    {% if can_manage_show %}<div class="container pb-5"><div class="auth-card mx-auto"><h2>Zone sensible</h2><p>La suppression est impossible tant que le spectacle possède des représentations.</p><form method="post" action="{% url 'catalogue:show-delete' show.id %}" onsubmit="return confirm('Supprimer définitivement ce spectacle ?');">{% csrf_token %}<button class="btn btn-outline-danger" type="submit">Supprimer le spectacle</button></form></div></div>{% endif %}
 </article>
 {% endblock %}
