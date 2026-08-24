@@ -1,16 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ type.type|title }}{% endblock %}
 {% block content %}
-    <h1>{{ type.type|title }}</h1>
-
-    <h2>Liste des artistes</h2>
-    <ul>
-    {% for artist_type in type.t_artistTypes.all %}
-        <li>{{ artist_type.artist.firstname }} {{ artist_type.artist.lastname }}</li>
-    {% empty %}
-        <li>Aucun artiste renseigné.</li>
-    {% endfor %}
-    </ul>
+<section class="resource-detail"><div class="container"><nav class="page-back"><a href="{% url 'catalogue:type-index' %}">← Tous les types</a></nav><p class="section-kicker">Discipline artistique</p><h1>{{ type.type|title }}</h1></div></section>
+<section class="resource-section py-5"><div class="container"><h2 class="resource-title">Artistes associés</h2><div class="resource-grid">{% for artist_type in type.t_artistTypes.all %}<a class="resource-card" href="{% url 'catalogue:artist-show' artist_type.artist.id %}"><span class="resource-avatar">{{ artist_type.artist.firstname|first|upper }}{{ artist_type.artist.lastname|first|upper }}</span><span><strong>{{ artist_type.artist.firstname }} {{ artist_type.artist.lastname }}</strong><small>Voir l’artiste</small></span><span aria-hidden="true">→</span></a>{% empty %}<p>Aucun artiste renseigné.</p>{% endfor %}</div></div></section>
 {% endblock %}

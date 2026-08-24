@@ -1,12 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}Liste des types{% endblock %}
-
+{% block title %}Types artistiques{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-    <ul>
-    {% for type in types %}
-        <li>{{ type.type }}</li>
-    {% endfor %}
-    </ul>
+<section class="resource-heading"><div class="container"><p class="section-kicker">Disciplines</p><h1>Types artistiques</h1><p>Explorez les métiers et disciplines représentés dans le catalogue.</p></div></section>
+<section class="resource-section py-5"><div class="container"><div class="tag-cloud">{% for type in types %}<a href="{% url 'catalogue:type-show' type.id %}">{{ type.type }}</a>{% empty %}<p>Aucun type artistique renseigné.</p>{% endfor %}</div></div></section>
 {% endblock %}

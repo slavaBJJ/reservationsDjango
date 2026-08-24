@@ -1,34 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ location.designation }}{% endblock %}
 {% block content %}
-    <h1>{{ location.designation }}</h1>
-    
-        <address>
-            <p>{{ location.address }}</p>
-            <p>{{ location.locality.postal_code }} {{ location.locality.locality }}</p>
-
-            {% if location.website %}
-            <p><a href="{{ location.website }}" target="_blank">{{ location.website }}</a></p>
-            {% else %}
-            <p>Pas de site web</p>
-            {% endif %}
-            
-            {% if location.phone %}
-            <p><a href="tel:{{ location.phone }}">{{ location.phone }}</a></p>
-            {% else %}
-            <p>Pas de téléphone</p>
-            {% endif %}
-        </address>
-        
-        <h2>Liste des spectacles</h2>
-        <ul>
-        {% for show in location.shows.all %}
-            <li>{{ show.title }}</li>
-        {% endfor %}
-        </ul>
-
-        <nav><a href="{% url 'catalogue:location-index' %}">Retour à l'index</a></nav>
-
+<section class="resource-detail"><div class="container"><nav class="page-back"><a href="{% url 'catalogue:location-index' %}">← Tous les lieux</a></nav><p class="section-kicker">Lieu de spectacle</p><h1>{{ location.designation }}</h1><address class="venue-contact"><div><strong>Adresse</strong><span>{{ location.address|default:'Adresse non renseignée' }}{% if location.locality %}<br>{{ location.locality.postal_code }} {{ location.locality.locality }}{% endif %}</span></div><div><strong>Téléphone</strong>{% if location.phone %}<a href="tel:{{ location.phone }}">{{ location.phone }}</a>{% else %}<span>Non renseigné</span>{% endif %}</div><div><strong>Site internet</strong>{% if location.website %}<a href="{{ location.website }}" target="_blank" rel="noopener noreferrer">Visiter le site ↗</a>{% else %}<span>Non renseigné</span>{% endif %}</div></address></div></section>
+<section class="resource-section py-5"><div class="container"><h2 class="resource-title">Spectacles dans ce lieu</h2><div class="resource-grid">{% for show in location.shows.all %}<a class="resource-card" href="{% url 'catalogue:show-show' show.id %}"><span class="resource-avatar">{{ show.title|first|upper }}</span><span><strong>{{ show.title }}</strong><small>{% if show.bookable %}Réservable{% else %}Non réservable{% endif %}</small></span><span aria-hidden="true">→</span></a>{% empty %}<p>Aucun spectacle programmé dans ce lieu.</p>{% endfor %}</div></div></section>
 {% endblock %}

@@ -1,31 +1,12 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}Réservation n°{{ reservation.id }}{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-
-    <p><strong>Créée le :</strong> {{ reservation.booking_date|date:'d/m/Y H:i' }}</p>
-    <p><strong>Statut :</strong> {{ reservation.status }}</p>
-
-    <h2>Places réservées</h2>
-    <ul>
-        {% for line in reservation.representation_reservations.all %}
-            <li>
-                <strong>{{ line.representation.show.title }}</strong><br>
-                {{ line.representation.schedule|date:'d/m/Y H:i' }}<br>
-                {% if line.representation.location %}
-                    {{ line.representation.location.designation }}<br>
-                {% endif %}
-                {{ line.quantity }} place{{ line.quantity|pluralize }}
-                à {{ line.price }} €
-            </li>
-        {% empty %}
-            <li>Aucune place dans cette réservation.</li>
-        {% endfor %}
-    </ul>
-
-    <nav>
-        <a href="{% url 'catalogue:reservation-index' %}">Retour à mes réservations</a>
-    </nav>
+<section class="booking-page"><div class="container">
+    <nav class="page-back"><a href="{% url 'catalogue:reservation-index' %}">← Retour à mes réservations</a></nav>
+    <div class="booking-card mx-auto"><div class="reservation-detail-head"><div><p class="section-kicker">Confirmation</p><h1>Réservation n°{{ reservation.id }}</h1><p>Créée le {{ reservation.booking_date|date:'d/m/Y à H:i' }}</p></div><span class="reservation-status">{{ reservation.status }}</span></div>
+        <h2 class="reservation-lines-title">Places réservées</h2>
+        <div class="reservation-lines">{% for line in reservation.representation_reservations.all %}<article><div><h3>{{ line.representation.show.title }}</h3><p>{{ line.representation.schedule|date:'d/m/Y à H:i' }}{% if line.representation.location %}<br>{{ line.representation.location.designation }}{% endif %}</p></div><div class="reservation-line-price"><strong>{{ line.quantity }} place{{ line.quantity|pluralize }}</strong><span>à {{ line.price }} €</span></div></article>{% empty %}<p>Aucune place dans cette réservation.</p>{% endfor %}</div>
+        <p class="detail-note mb-0">Présentez le numéro de cette réservation lors de votre arrivée.</p>
+    </div>
+</div></section>
 {% endblock %}

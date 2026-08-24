@@ -73,7 +73,7 @@ ROOT_URLCONF = 'reservations.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'catalogue' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -120,6 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'accounts.validators.UppercaseAndSpecialCharacterValidator',
+    },
 ]
 
 
@@ -153,6 +156,7 @@ LOGOUT_REDIRECT_URL= 'home'
 # Email configuration
 #https://docs.djangoproject.com/fr/5.2/topics/email/#smtp-backends
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = os.getenv('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@scene-ouverte.local')
 
 '''REST_FRAMEWORK={
     'DEFAULT_AUTHENTIFICATION_CLASSES' : [

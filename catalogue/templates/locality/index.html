@@ -1,16 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}Liste des localités{% endblock %}
-
+{% block title %}Localités{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-    <ul>
-    {% for locality in localities %}
-        <li>
-            <a href="{% url 'catalogue:locality-show' locality.id %}">
-                {{ locality.postal_code }} {{ locality.locality }}
-            </a>
-        </li>
-    {% endfor %}
-    </ul>
+<section class="resource-heading"><div class="container"><p class="section-kicker">Près de chez vous</p><h1>Localités</h1><p>Parcourez les lieux culturels ville par ville.</p></div></section>
+<section class="resource-section py-5"><div class="container"><div class="locality-list">{% for locality in localities %}<a href="{% url 'catalogue:locality-show' locality.id %}"><span>{{ locality.postal_code }}</span><strong>{{ locality.locality }}</strong><span aria-hidden="true">→</span></a>{% empty %}<p>Aucune localité renseignée.</p>{% endfor %}</div></div></section>
 {% endblock %}

@@ -1,39 +1,20 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ representation.show.title }} — {{ rep_date }}{% endblock %}
 {% block content %}
-    <article>
-        <h1>Représentation du {{ rep_date }} à {{ rep_time }}</h1>
-        <p><strong>Spectacle :</strong> {{ representation.show.title }}</p>
-
-        <p>
-            <strong>Lieu :</strong>
-            {% if representation.location %}
-                {{ representation.location.designation }}
-            {% elif representation.show.location %}
-                {{ representation.show.location.designation }}
-            {% else %}
-                <em>à déterminer</em>
-            {% endif %}
-        </p>
-
-        {% if can_reserve %}
-            <p>
-                <a href="{% url 'catalogue:reservation-create' representation.id %}">
-                    Réserver des places
-                </a>
-            </p>
-        {% elif not representation.show.bookable %}
-            <p><em>Ce spectacle n'est pas réservable.</em></p>
-        {% elif not representation.show.prices.exists %}
-            <p><em>Aucun tarif n'est disponible.</em></p>
-        {% else %}
-            <p><em>Cette représentation est passée.</em></p>
-        {% endif %}
-    </article>
-
-    <nav>
-        <a href="{% url 'catalogue:representation-index' %}">Retour à l'index</a>
-    </nav>
+<section class="booking-page"><div class="container">
+    <nav class="page-back"><a href="{% url 'catalogue:representation-index' %}">← Toutes les représentations</a></nav>
+    <div class="booking-card mx-auto">
+        <p class="section-kicker">Votre sortie</p><h1>{{ representation.show.title }}</h1>
+        <div class="booking-summary">
+            <div><span>Date</span><strong>{{ representation.schedule|date:'l d F Y' }}</strong></div>
+            <div><span>Heure</span><strong>{{ rep_time }}</strong></div>
+            <div><span>Lieu</span><strong>{% if representation.location %}{{ representation.location.designation }}{% elif representation.show.location %}{{ representation.show.location.designation }}{% else %}À déterminer{% endif %}</strong></div>
+        </div>
+        {% if can_reserve %}<div class="booking-action"><div><h2>Prêt à réserver ?</h2><p>Choisissez votre tarif et le nombre de places à l’étape suivante.</p></div><a class="btn btn-primary btn-lg" href="{% url 'catalogue:reservation-create' representation.id %}">Réserver des places</a></div>
+        {% elif not representation.show.bookable %}<div class="alert alert-secondary mb-0">Ce spectacle n'est pas réservable.</div>
+        {% elif not representation.show.prices.exists %}<div class="alert alert-warning mb-0">Aucun tarif n'est disponible.</div>
+        {% else %}<div class="alert alert-secondary mb-0">Cette représentation est passée.</div>{% endif %}
+        <a class="detail-show-link" href="{% url 'catalogue:show-show' representation.show.id %}">Voir la fiche complète du spectacle →</a>
+    </div>
+</div></section>
 {% endblock %}

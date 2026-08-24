@@ -1,20 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ locality.locality|title }}{% endblock %}
 {% block content %}
-    <h2>{{ locality.postal_code }} {{ locality.locality|title }}</h2>
-
-    <h3>Lieux de spectacle</h3>
-
-    <ul>
-    {% for location in locality.locations.all %}
-        <li><a href="#">{{ location.designation }}</a></li>
-    {% endfor %}
-    </ul>
-
-    <p><code>{{ locality.locations.all }}</code></p>
-
-
-    <nav><a href="{% url 'catalogue:locality-index' %}">Retour à l'index</a></nav>
+<section class="resource-detail"><div class="container"><nav class="page-back"><a href="{% url 'catalogue:locality-index' %}">← Toutes les localités</a></nav><p class="section-kicker">{{ locality.postal_code }}</p><h1>{{ locality.locality|title }}</h1></div></section>
+<section class="resource-section py-5"><div class="container"><h2 class="resource-title">Lieux de spectacle</h2><div class="venue-grid">{% for location in locality.locations.all %}<article class="venue-card"><span class="venue-icon" aria-hidden="true">⌂</span><h2><a href="{% url 'catalogue:location-show' location.id %}">{{ location.designation }}</a></h2>{% if location.address %}<p>{{ location.address }}</p>{% endif %}<a href="{% url 'catalogue:location-show' location.id %}">Voir le lieu →</a></article>{% empty %}<p>Aucun lieu de spectacle renseigné.</p>{% endfor %}</div></div></section>
 {% endblock %}

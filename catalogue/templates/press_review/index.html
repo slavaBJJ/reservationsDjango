@@ -1,22 +1,5 @@
 {% extends 'layouts/base.html' %}
-
 {% block title %}{{ title }}{% endblock %}
-
-{% block content %}
-    <h1>{{ title }}</h1>
-    <p><a href="{% url 'catalogue:press-review-create' %}">Soumettre une critique</a></p>
-
-    <ul>
-        {% for press_review in press_reviews %}
-            <li>
-                <strong>{{ press_review.title }}</strong>
-                — {{ press_review.show.title }}
-                — {{ press_review.get_moderation_status_display }}
-                — <a href="{% url 'catalogue:press-review-edit' press_review.id %}">Modifier</a>
-                — <a href="{% url 'catalogue:press-review-delete' press_review.id %}">Supprimer</a>
-            </li>
-        {% empty %}
-            <li>Vous n'avez soumis aucune critique.</li>
-        {% endfor %}
-    </ul>
-{% endblock %}
+{% block content %}<section class="resource-heading"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3"><div><p class="section-kicker">Espace critique</p><h1>{{ title }}</h1><p>Suivez la publication de vos articles et critiques.</p></div><a class="btn btn-primary" href="{% url 'catalogue:press-review-create' %}">Soumettre une critique</a></div></section><section class="resource-section py-5"><div class="container"><div class="press-dashboard">
+{% for press_review in press_reviews %}<article><div><span class="reservation-status">{{ press_review.get_moderation_status_display }}</span><h2>{{ press_review.title }}</h2><p>{{ press_review.show.title }}</p></div><div class="d-flex gap-2"><a class="btn btn-outline-secondary" href="{% url 'catalogue:press-review-edit' press_review.id %}">Modifier</a><a class="btn btn-outline-danger" href="{% url 'catalogue:press-review-delete' press_review.id %}">Supprimer</a></div></article>{% empty %}<div class="catalogue-empty text-center"><h2>Aucune critique soumise</h2><p>Votre première critique apparaîtra ici.</p></div>{% endfor %}
+</div></div></section>{% endblock %}

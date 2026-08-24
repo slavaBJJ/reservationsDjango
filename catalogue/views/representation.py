@@ -10,7 +10,7 @@ def index(request):
         'show',
         'location',
         'show__location',
-    ).all()
+    ).order_by('schedule', 'pk')
     title = 'Liste des représentations'
 
     return render(request, 'representation/index.html', {

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 64" role="img" aria-labelledby="title description">
+  <title id="title">Scène ouverte</title>
+  <desc id="description">Un rideau de scène corail ouvert autour d’un projecteur lumineux.</desc>
+  <g transform="translate(2 2)">
+    <rect width="60" height="60" rx="18" fill="#ef6a5b"/>
+    <path d="M12 13h36v7H12z" fill="#111a2e"/>
+    <path d="M15 20h13c0 14-3 23-11 29l-5-7c5-5 7-11 7-22h-4zM45 20H32c0 14 3 23 11 29l5-7c-5-5-7-11-7-22h4z" fill="#f8f4ed"/>
+    <circle cx="30" cy="36" r="6" fill="#f9d877"/>
+    <path d="M23 51h14" stroke="#111a2e" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="78" y="29" fill="#f8f4ed" font-family="Georgia, 'Times New Roman', serif" font-size="25" font-weight="700">Scène</text>
+  <text x="78" y="52" fill="#ef6a5b" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="2">OUVERTE</text>
+</svg>

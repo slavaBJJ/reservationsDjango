@@ -1,29 +1,17 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}Liste des représentations{% endblock %}
-
+{% block title %}Représentations{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-    <ul>
-    {% for representation in representations %}
-        <li>
-            <time datetime="{{ representation.schedule|date:'c' }}">
-                {{ representation.schedule|date:'Y-m-d' }}
-            </time>
-            - {{ representation.show.title }}
-
-            {% if representation.location %}
-                - <span>{{ representation.location.designation }}</span>
-            {% elif representation.show.location %}
-                - <span>{{ representation.show.location.designation }}</span>
-            {% else %}
-                - <em>Pas de lieu</em>
-            {% endif %}
-
-            <a href="{% url 'catalogue:representation-show' representation.id %}">&#128065;</a>
-        </li>
-    {% empty %}
-        <li>Aucune représentation disponible.</li>
-    {% endfor %}
-    </ul>
+<section class="page-heading"><div class="container"><p class="section-kicker">Agenda</p><h1>Prochaines représentations</h1><p>Choisissez une date et préparez votre prochaine sortie.</p></div></section>
+<section class="schedule-section py-5"><div class="container">
+    <div class="schedule-list">
+        {% for representation in representations %}
+            <article class="schedule-row">
+                <time datetime="{{ representation.schedule|date:'c' }}"><strong>{{ representation.schedule|date:'d' }}</strong><span>{{ representation.schedule|date:'M Y' }}</span><span>{{ representation.schedule|date:'H:i' }}</span></time>
+                <div class="schedule-info"><p>Représentation</p><h2>{{ representation.show.title }}</h2><span>{% if representation.location %}{{ representation.location.designation }}{% elif representation.show.location %}{{ representation.show.location.designation }}{% else %}Lieu à confirmer{% endif %}</span></div>
+                {% if representation.show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
+                <a class="btn btn-outline-secondary" href="{% url 'catalogue:representation-show' representation.id %}">Voir la date</a>
+            </article>
+        {% empty %}<div class="catalogue-empty text-center"><span aria-hidden="true">◇</span><h2>Aucune représentation disponible</h2><p>Revenez bientôt pour découvrir les nouvelles dates.</p><a class="btn btn-primary" href="{% url 'catalogue:show-index' %}">Parcourir les spectacles</a></div>{% endfor %}
+    </div>
+</div></section>
 {% endblock %}

@@ -1,15 +1,3 @@
 {% extends 'layouts/base.html' %}
-
 {% block title %}{{ title }}{% endblock %}
-
-{% block content %}
-    <h1>{{ title }}</h1>
-    <p>Voulez-vous vraiment supprimer « {{ press_review.title }} » ?</p>
-
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit">Confirmer la suppression</button>
-    </form>
-
-    <nav><a href="{% url 'catalogue:press-review-index' %}">Annuler</a></nav>
-{% endblock %}
+{% block content %}<section class="auth-section"><div class="container"><div class="auth-card mx-auto text-center"><p class="section-kicker">Suppression</p><h1>{{ title }}</h1><p>Voulez-vous vraiment supprimer « {{ press_review.title }} » ?</p><form method="post">{% csrf_token %}<button class="btn btn-danger w-100" type="submit">Confirmer la suppression</button></form><p class="mt-4 mb-0"><a href="{% url 'catalogue:press-review-index' %}">Annuler</a></p></div></div></section>{% endblock %}

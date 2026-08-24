@@ -1,28 +1,3 @@
 {% extends 'layouts/base.html' %}
-
 {% block title %}{{ title }}{% endblock %}
-
-{% block content %}
-    <h1>{{ title }}</h1>
-
-    <p>Le fichier doit être encodé en UTF-8 et utiliser exactement ces colonnes :</p>
-    <pre>{{ csv_fields|join:',' }}</pre>
-
-    <p>
-        Les valeurs acceptées pour <code>bookable</code> sont
-        <code>1/0</code>, <code>true/false</code> ou <code>oui/non</code>.
-        Le lieu peut rester vide ou correspondre au slug d'un lieu existant.
-    </p>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Importer</button>
-    </form>
-
-    <nav>
-        <a href="{% url 'catalogue:shows-csv-export' %}">
-            Télécharger un exemple avec les données actuelles
-        </a>
-    </nav>
-{% endblock %}
+{% block content %}<section class="booking-page"><div class="container"><div class="row justify-content-center g-4"><div class="col-lg-7"><div class="booking-card h-100"><p class="section-kicker">Administration du catalogue</p><h1>{{ title }}</h1><p>Importez plusieurs spectacles à partir d’un fichier CSV encodé en UTF-8.</p><form method="post" enctype="multipart/form-data">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary btn-lg w-100" type="submit">Importer le fichier</button></form></div></div><div class="col-lg-4"><aside class="import-guide"><p class="section-kicker">Format attendu</p><h2>Préparer le fichier</h2><p>Utilisez exactement les colonnes suivantes :</p><code>{{ csv_fields|join:',' }}</code><p>Pour <strong>bookable</strong> : <code>1/0</code>, <code>true/false</code> ou <code>oui/non</code>.</p><p>Le lieu peut rester vide ou contenir le slug d’un lieu existant.</p><a class="btn btn-outline-light w-100" href="{% url 'catalogue:shows-csv-export' %}">Télécharger les données actuelles</a></aside></div></div></div></section>{% endblock %}

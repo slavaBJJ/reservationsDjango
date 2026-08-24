@@ -1,31 +1,14 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}Mes réservations{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-
-    <ul>
-        {% for reservation in reservations %}
-            <li>
-                <a href="{% url 'catalogue:reservation-show' reservation.id %}">
-                    Réservation n°{{ reservation.id }}
-                </a>
-                — {{ reservation.booking_date|date:'d/m/Y H:i' }}
-                — <strong>{{ reservation.status }}</strong>
-
-                <ul>
-                    {% for line in reservation.representation_reservations.all %}
-                        <li>
-                            {{ line.representation.show.title }}
-                            — {{ line.representation.schedule|date:'d/m/Y H:i' }}
-                            — {{ line.quantity }} place{{ line.quantity|pluralize }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        {% empty %}
-            <li>Vous n'avez encore aucune réservation.</li>
-        {% endfor %}
-    </ul>
+<section class="page-heading"><div class="container"><p class="section-kicker">Espace personnel</p><h1>Mes réservations</h1><p>Retrouvez ici l’historique de toutes vos sorties.</p></div></section>
+<section class="reservations-section py-5"><div class="container"><div class="reservation-list">
+    {% for reservation in reservations %}
+        <article class="reservation-card"><div class="reservation-card-head"><div><p>Dossier</p><h2><a href="{% url 'catalogue:reservation-show' reservation.id %}">Réservation n°{{ reservation.id }}</a></h2></div><span class="reservation-status">{{ reservation.status }}</span></div>
+            <p class="reservation-date">Créée le {{ reservation.booking_date|date:'d/m/Y à H:i' }}</p>
+            <ul>{% for line in reservation.representation_reservations.all %}<li><div><strong>{{ line.representation.show.title }}</strong><span>{{ line.representation.schedule|date:'d/m/Y à H:i' }}</span></div><span>{{ line.quantity }} place{{ line.quantity|pluralize }}</span></li>{% endfor %}</ul>
+            <a class="btn btn-outline-secondary" href="{% url 'catalogue:reservation-show' reservation.id %}">Voir le détail</a>
+        </article>
+    {% empty %}<div class="catalogue-empty text-center"><span aria-hidden="true">◇</span><h2>Aucune réservation</h2><p>Votre prochaine sortie commence dans le catalogue.</p><a class="btn btn-primary" href="{% url 'catalogue:show-index' %}">Découvrir les spectacles</a></div>{% endfor %}
+</div></div></section>
 {% endblock %}

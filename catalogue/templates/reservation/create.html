@@ -1,25 +1,17 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}Réserver {{ representation.show.title }}{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-
-    <p><strong>Spectacle :</strong> {{ representation.show.title }}</p>
-    <p>
-        <strong>Date :</strong>
-        {{ representation.schedule|date:'d/m/Y H:i' }}
-    </p>
-
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Confirmer la réservation</button>
-    </form>
-
-    <nav>
-        <a href="{% url 'catalogue:representation-show' representation.id %}">
-            Annuler et revenir à la représentation
-        </a>
-    </nav>
+<section class="booking-page"><div class="container">
+    <nav class="page-back"><a href="{% url 'catalogue:representation-show' representation.id %}">← Revenir à la représentation</a></nav>
+    <div class="row justify-content-center g-4">
+        <div class="col-lg-7"><div class="booking-card h-100"><p class="section-kicker">Réservation</p><h1>Choisissez vos places</h1>
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <form method="post">{% csrf_token %}
+                {% for field in form %}<div class="mb-4"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}{% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+                <button class="btn btn-primary btn-lg w-100" type="submit">Confirmer la réservation</button>
+            </form>
+        </div></div>
+        <div class="col-lg-4"><aside class="booking-recap"><p class="section-kicker">Récapitulatif</p><h2>{{ representation.show.title }}</h2><dl><div><dt>Date</dt><dd>{{ representation.schedule|date:'d/m/Y' }}</dd></div><div><dt>Heure</dt><dd>{{ representation.schedule|date:'H:i' }}</dd></div><div><dt>Lieu</dt><dd>{% if representation.location %}{{ representation.location.designation }}{% elif representation.show.location %}{{ representation.show.location.designation }}{% else %}À confirmer{% endif %}</dd></div></dl></aside></div>
+    </div>
+</div></section>
 {% endblock %}

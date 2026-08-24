@@ -1,75 +1,89 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %} Liste des spectacles {% endblock %}
-
+{% load static %}
+{% block title %}Spectacles{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
+<section class="catalogue-hero">
+    <div class="container">
+        <p class="section-kicker">À l’affiche</p>
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div><h1>Découvrez nos spectacles</h1><p class="mb-0">Théâtre, musique, danse et créations : trouvez votre prochaine sortie.</p></div>
+            <p class="catalogue-count mb-0"><strong>{{ shows.paginator.count }}</strong> spectacle{{ shows.paginator.count|pluralize }}</p>
+        </div>
+    </div>
+</section>
 
-    <form method="get">
-        <p>
-            <label for="q">Rechercher</label>
-            <input id="q" name="q" type="search" value="{{ search }}"
-                   placeholder="Titre ou description">
-        </p>
-        <p>
-            <label for="location">Lieu</label>
-            <select id="location" name="location">
-                <option value="">Tous les lieux</option>
-                {% for location in locations %}
-                    <option value="{{ location.id }}"
-                            {% if selected_location == location.id|stringformat:'s' %}selected{% endif %}>
-                        {{ location.designation }}
-                    </option>
-                {% endfor %}
-            </select>
-        </p>
-        <p>
-            <label for="bookable">Réservation</label>
-            <select id="bookable" name="bookable">
-                <option value="">Tous les spectacles</option>
-                <option value="1" {% if selected_bookable == '1' %}selected{% endif %}>Réservable</option>
-                <option value="0" {% if selected_bookable == '0' %}selected{% endif %}>Non réservable</option>
-            </select>
-        </p>
-        <input type="hidden" name="sort" value="{{ selected_sort }}">
-        <button type="submit">Appliquer</button>
-        <a href="{% url 'catalogue:show-index' %}">Réinitialiser</a>
-    </form>
+<section class="catalogue-content py-5">
+    <div class="container">
+        <form class="catalogue-filters" method="get" aria-label="Rechercher et filtrer les spectacles">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                    <label class="form-label" for="q">Rechercher</label>
+                    <input class="form-control" id="q" name="q" type="search" value="{{ search }}" placeholder="Titre ou description">
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="location">Lieu</label>
+                    <select class="form-select" id="location" name="location">
+                        <option value="">Tous les lieux</option>
+                        {% for location in locations %}<option value="{{ location.id }}" {% if selected_location == location.id|stringformat:'s' %}selected{% endif %}>{{ location.designation }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label" for="bookable">Disponibilité</label>
+                    <select class="form-select" id="bookable" name="bookable">
+                        <option value="">Tous</option>
+                        <option value="1" {% if selected_bookable == '1' %}selected{% endif %}>Réservable</option>
+                        <option value="0" {% if selected_bookable == '0' %}selected{% endif %}>Non réservable</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 d-grid"><input type="hidden" name="sort" value="{{ selected_sort }}"><button class="btn btn-primary" type="submit">Appliquer</button></div>
+            </div>
+            {% if search or selected_location or selected_bookable %}<div class="mt-3"><a href="{% url 'catalogue:show-index' %}">Effacer tous les filtres</a></div>{% endif %}
+        </form>
 
-    <nav aria-label="Trier les spectacles">
-        Trier par :
-        <a href="{% querystring sort='title' page=None %}">titre</a> |
-        <a href="{% querystring sort='location' page=None %}">lieu</a> |
-        <a href="{% querystring sort='bookable' page=None %}">disponibilité</a> |
-        <a href="{% querystring sort='price' page=None %}">prix</a>
-    </nav>
+        <div class="catalogue-toolbar d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <p class="mb-0 text-body-secondary">Page {{ shows.number }} sur {{ shows.paginator.num_pages }}</p>
+            <nav class="sort-links" aria-label="Trier les spectacles">
+                <span>Trier par</span>
+                <a class="{% if selected_sort == 'title' %}active{% endif %}" href="{% querystring sort='title' page=None %}" {% if selected_sort == 'title' %}aria-current="true"{% endif %}>Titre</a>
+                <a class="{% if selected_sort == 'location' %}active{% endif %}" href="{% querystring sort='location' page=None %}" {% if selected_sort == 'location' %}aria-current="true"{% endif %}>Lieu</a>
+                <a class="{% if selected_sort == 'bookable' %}active{% endif %}" href="{% querystring sort='bookable' page=None %}" {% if selected_sort == 'bookable' %}aria-current="true"{% endif %}>Disponibilité</a>
+                <a class="{% if selected_sort == 'price' %}active{% endif %}" href="{% querystring sort='price' page=None %}" {% if selected_sort == 'price' %}aria-current="true"{% endif %}>Prix</a>
+            </nav>
+        </div>
 
-    <ul>
-    {% for show in shows %}
-        <li>
-            <a href="{% url 'catalogue:show-show' show.id %}">{{ show.title }}</a>
-            {% if show.location %}— {{ show.location.designation }}{% endif %}
-            {% if show.min_price is not None %}— dès {{ show.min_price }} €{% endif %}
-            {% if not show.bookable %}
-                <em>Réservation indisponible</em>
-            {% endif %}
-        </li>
-    {% empty %}
-        <li>Aucun spectacle disponible.</li>
-    {% endfor %}
-    </ul>
+        <div class="row g-4">
+            {% for show in shows %}
+                <div class="col-md-6 col-xl-4">
+                    <article class="show-card h-100">
+                        <a class="show-card-visual" href="{% url 'catalogue:show-show' show.id %}" tabindex="-1" aria-hidden="true">
+                            {% if show.poster_url %}<img src="{% static 'catalogue/images/' %}{{ show.poster_url }}" alt="" loading="lazy">{% else %}<span>{{ show.title|first|upper }}</span>{% endif %}
+                        </a>
+                        <div class="show-card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                {% if show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Indisponible</span>{% endif %}
+                                {% if show.duration %}<span class="show-duration">{{ show.duration }} min</span>{% endif %}
+                            </div>
+                            <h2><a href="{% url 'catalogue:show-show' show.id %}">{{ show.title }}</a></h2>
+                            {% if show.description %}<p class="show-description">{{ show.description|truncatewords:20 }}</p>{% endif %}
+                            <div class="show-card-meta mt-auto">
+                                <span>{% if show.location %}{{ show.location.designation }}{% else %}Lieu à confirmer{% endif %}</span>
+                                <strong>{% if show.min_price is not None %}Dès {{ show.min_price }} €{% else %}Tarif à confirmer{% endif %}</strong>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            {% empty %}
+                <div class="col-12"><div class="catalogue-empty text-center"><span aria-hidden="true">⌕</span><h2>Aucun spectacle trouvé</h2><p>Modifiez vos critères ou réinitialisez les filtres.</p><a class="btn btn-primary" href="{% url 'catalogue:show-index' %}">Voir tous les spectacles</a></div></div>
+            {% endfor %}
+        </div>
 
-    {% if shows.paginator.num_pages > 1 %}
-        <nav aria-label="Pagination">
-            {% if shows.has_previous %}
-                <a href="{% querystring page=shows.previous_page_number %}">Précédent</a>
-            {% endif %}
-
-            <span>Page {{ shows.number }} sur {{ shows.paginator.num_pages }}</span>
-
-            {% if shows.has_next %}
-                <a href="{% querystring page=shows.next_page_number %}">Suivant</a>
-            {% endif %}
-        </nav>
-    {% endif %}
+        {% if shows.paginator.num_pages > 1 %}
+            <nav class="catalogue-pagination" aria-label="Pagination du catalogue">
+                {% if shows.has_previous %}<a class="btn btn-outline-secondary" href="{% querystring page=shows.previous_page_number %}">← Précédent</a>{% else %}<span></span>{% endif %}
+                <span>Page <strong>{{ shows.number }}</strong> sur {{ shows.paginator.num_pages }}</span>
+                {% if shows.has_next %}<a class="btn btn-outline-secondary" href="{% querystring page=shows.next_page_number %}">Suivant →</a>{% else %}<span></span>{% endif %}
+            </nav>
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

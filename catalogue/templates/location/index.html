@@ -1,19 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}Liste des lieux de spectacle{% endblock %}
-
+{% block title %}Lieux de spectacle{% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-    <ul>
-    {% for location in locations %}
-        <li>
-		  <a href="{% url 'catalogue:location-show' location.id %}">
-            {{ location.designation }}
-		  </a>
-          {% if location.website %}
-          - <a href="{{ location.website }}">{{ location.website }}</a>
-          {% endif %}
-        </li>
-    {% endfor %}
-    </ul>
+<section class="resource-heading"><div class="container"><p class="section-kicker">Où sortir ?</p><h1>Lieux de spectacle</h1><p>Découvrez les scènes et salles qui accueillent la programmation.</p></div></section>
+<section class="resource-section py-5"><div class="container"><div class="venue-grid">{% for location in locations %}<article class="venue-card"><span class="venue-icon" aria-hidden="true">⌂</span><h2><a href="{% url 'catalogue:location-show' location.id %}">{{ location.designation }}</a></h2>{% if location.locality %}<p>{{ location.locality.postal_code }} {{ location.locality.locality }}</p>{% endif %}{% if location.website %}<a href="{{ location.website }}" target="_blank" rel="noopener noreferrer">Visiter le site ↗</a>{% endif %}</article>{% empty %}<div class="catalogue-empty"><h2>Aucun lieu</h2><p>Les lieux seront bientôt renseignés.</p></div>{% endfor %}</div></div></section>
 {% endblock %}

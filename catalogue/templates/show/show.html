@@ -1,103 +1,89 @@
 {% extends 'layouts/base.html' %}
-
 {% load static %}
-
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}{{ show.title }}{% endblock %}
 {% block content %}
-    <h1>{{ show.title }}</h1>
+<article>
+    <header class="show-detail-hero">
+        <div class="container">
+            <nav class="detail-breadcrumb" aria-label="Fil d’Ariane"><a href="{% url 'catalogue:show-index' %}">Spectacles</a><span aria-hidden="true">/</span><span>{{ show.title }}</span></nav>
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5">
+                    <div class="detail-poster">
+                        {% if show.poster_url %}<img src="{% static 'catalogue/images/' %}{{ show.poster_url }}" alt="Affiche de {{ show.title }}">
+                        {% else %}<span aria-hidden="true">{{ show.title|first|upper }}</span>{% endif %}
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    {% if show.bookable %}<span class="status-badge available">Réservable</span>{% else %}<span class="status-badge unavailable">Non réservable</span>{% endif %}
+                    <h1>{{ show.title }}</h1>
+                    {% if show.description %}<p class="detail-lead">{{ show.description }}</p>{% endif %}
+                    <dl class="detail-facts">
+                        {% if show.location %}<div><dt>Lieu de création</dt><dd>{{ show.location.designation }}</dd></div>{% endif %}
+                        {% if show.duration %}<div><dt>Durée</dt><dd>{{ show.duration }} minutes</dd></div>{% endif %}
+                        <div><dt>Création</dt><dd>{{ show.created_in }}</dd></div>
+                    </dl>
+                    {% if upcoming_representations and show.bookable %}<a class="btn btn-primary btn-lg" href="#representations">Choisir une représentation</a>{% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
 
-    {% if show.poster_url %}
-        <p>
-            <img src="{% static 'catalogue/images/' %}{{ show.poster_url }}"
-                 alt="{{ show.title }}" width="200">
-        </p>
-    {% else %}
-        <canvas width="200" height="100" style="border: 1px solid #000000;"></canvas>
-    {% endif %}
+    <div class="show-detail-content container py-5">
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <section class="detail-section" aria-labelledby="team-title">
+                    <p class="section-kicker">Distribution</p><h2 id="team-title">L’équipe artistique</h2>
+                    <div class="artist-list">
+                        {% for collaboration in show.artistTypeShows.all %}
+                            <div class="artist-chip"><span>{{ collaboration.artist_type.artist.firstname|first }}{{ collaboration.artist_type.artist.lastname|first }}</span><div><strong>{{ collaboration.artist_type.artist.firstname }} {{ collaboration.artist_type.artist.lastname }}</strong><small>{{ collaboration.artist_type.type.type }}</small></div></div>
+                        {% empty %}<p class="text-body-secondary">La distribution sera communiquée prochainement.</p>{% endfor %}
+                    </div>
+                </section>
 
-    {% if show.location %}
-        <p><strong>Lieu de création :</strong> {{ show.location.designation }}</p>
-    {% endif %}
+                <section class="detail-section" id="representations" aria-labelledby="representations-title">
+                    <p class="section-kicker">Prochaines dates</p><h2 id="representations-title">Représentations</h2>
+                    <div class="representation-list">
+                        {% for representation in upcoming_representations %}
+                            <div class="representation-row">
+                                <time datetime="{{ representation.schedule|date:'c' }}"><strong>{{ representation.schedule|date:'d' }}</strong><span>{{ representation.schedule|date:'M Y' }}</span><span>{{ representation.schedule|date:'H:i' }}</span></time>
+                                <div><strong>{% if representation.location %}{{ representation.location.designation }}{% elif show.location %}{{ show.location.designation }}{% else %}Lieu à confirmer{% endif %}</strong></div>
+                                <a class="btn {% if show.bookable %}btn-primary{% else %}btn-outline-secondary disabled{% endif %}" href="{% url 'catalogue:representation-show' representation.id %}">Voir la date</a>
+                            </div>
+                        {% empty %}<div class="detail-empty"><p>Aucune représentation à venir n’est programmée pour le moment.</p></div>{% endfor %}
+                    </div>
+                </section>
 
-    <p><strong>Durée :</strong> {{ show.duration }} minutes</p>
-    <p><strong>Année de création :</strong> {{ show.created_in }}</p>
+                <section class="detail-section" aria-labelledby="reviews-title">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3"><div><p class="section-kicker">Le public en parle</p><h2 id="reviews-title">Avis des spectateurs</h2></div>
+                        {% if request.user.is_authenticated and not user_review and user_can_review %}<a class="btn btn-outline-secondary" href="{% url 'catalogue:review-create' show.id %}">Donner mon avis</a>{% endif %}
+                    </div>
+                    {% if request.user.is_authenticated %}
+                        {% if user_review %}<div class="my-review"><strong>{% if user_review.moderation_status == 'pending' %}Votre avis est en attente de modération.{% elif user_review.moderation_status == 'rejected' %}Votre avis a été refusé. Vous pouvez le corriger.{% else %}Votre avis a été publié.{% endif %}</strong><p class="mb-2">{{ user_review.stars }}/5 — {{ user_review.review }}</p><a href="{% url 'catalogue:review-edit' user_review.id %}">Modifier</a> · <a href="{% url 'catalogue:review-delete' user_review.id %}">Supprimer</a></div>
+                        {% elif not user_can_review %}<p class="detail-note">Vous pourrez donner votre avis après avoir réservé et assisté à une représentation.</p>{% endif %}
+                    {% else %}<p class="detail-note"><a href="{% url 'login' %}?next={{ request.path|urlencode }}">Connectez-vous</a> pour donner votre avis.</p>{% endif %}
+                    <div class="review-grid">
+                        {% for review in reviews %}<article class="review-card"><div class="review-stars" aria-label="Note : {{ review.stars }} sur 5">{{ review.stars }}/5 ★</div><blockquote>« {{ review.review }} »</blockquote><p>{{ review.user.username }}</p></article>
+                        {% empty %}<p class="text-body-secondary">Aucun avis validé pour ce spectacle.</p>{% endfor %}
+                    </div>
+                </section>
 
-    {% if show.bookable %}
-        <p><em>Réservable</em></p>
-    {% else %}
-        <p><em>Non réservable</em></p>
-    {% endif %}
+                <section class="detail-section" aria-labelledby="press-title">
+                    <p class="section-kicker">Revue de presse</p><h2 id="press-title">Critiques de presse</h2>
+                    <div class="press-list">
+                        {% for press_review in press_reviews %}<article class="press-card"><h3>{{ press_review.title }}</h3><p class="press-author">Par {{ press_review.user.get_full_name|default:press_review.user.username }}</p>{% if press_review.content %}<p>{{ press_review.content|linebreaksbr }}</p>{% endif %}{% if press_review.url %}<a href="{{ press_review.url }}" target="_blank" rel="noopener noreferrer">Lire l’article original ↗</a>{% endif %}</article>
+                        {% empty %}<p class="text-body-secondary">Aucune critique de presse publiée pour ce spectacle.</p>{% endfor %}
+                    </div>
+                </section>
+            </div>
 
-    <section>
-        <h2>Avis</h2>
-
-        {% if request.user.is_authenticated %}
-            {% if user_review %}
-                {% if user_review.moderation_status == 'pending' %}
-                    <article>
-                        <p><strong>Votre avis est en attente de modération.</strong></p>
-                        <p>{{ user_review.stars }}/5 — {{ user_review.review }}</p>
-                    </article>
-                {% elif user_review.moderation_status == 'rejected' %}
-                    <article>
-                        <p><strong>Votre avis a été refusé.</strong></p>
-                        <p>Vous pouvez le modifier puis le soumettre à nouveau.</p>
-                    </article>
-                {% endif %}
-                <p>
-                    <a href="{% url 'catalogue:review-edit' user_review.id %}">Modifier mon avis</a>
-                    —
-                    <a href="{% url 'catalogue:review-delete' user_review.id %}">Supprimer mon avis</a>
-                </p>
-            {% elif user_can_review %}
-                <p><a href="{% url 'catalogue:review-create' show.id %}">Donner mon avis</a></p>
-            {% else %}
-                <p>
-                    <em>
-                        Vous pourrez donner votre avis après avoir réservé et assisté
-                        à une représentation de ce spectacle.
-                    </em>
-                </p>
-            {% endif %}
-        {% else %}
-            <p><a href="{% url 'login' %}?next={{ request.path|urlencode }}">Connectez-vous pour donner votre avis</a></p>
-        {% endif %}
-
-        {% for review in reviews %}
-            <article>
-                <p>
-                    <strong>{{ review.user.username }}</strong>
-                    — {{ review.stars }}/5
-                </p>
-                <p>{{ review.review }}</p>
-            </article>
-        {% empty %}
-            <p>Aucun avis validé pour ce spectacle.</p>
-        {% endfor %}
-    </section>
-
-    <section>
-        <h2>Critiques de presse</h2>
-        {% for press_review in press_reviews %}
-            <article>
-                <h3>{{ press_review.title }}</h3>
-                <p>Par {{ press_review.user.get_full_name|default:press_review.user.username }}</p>
-                {% if press_review.content %}
-                    <p>{{ press_review.content|linebreaksbr }}</p>
-                {% endif %}
-                {% if press_review.url %}
-                    <p>
-                        <a href="{{ press_review.url }}" rel="noopener noreferrer">
-                            Lire l’article original
-                        </a>
-                    </p>
-                {% endif %}
-            </article>
-        {% empty %}
-            <p>Aucune critique de presse publiée pour ce spectacle.</p>
-        {% endfor %}
-    </section>
-
-    <nav><a href="{% url 'catalogue:show-index' %}">Retour à l'index</a></nav>
+            <aside class="col-lg-4" aria-label="Tarifs du spectacle">
+                <div class="detail-sidebar">
+                    <p class="section-kicker">Tarifs</p><h2>Choisissez votre formule</h2>
+                    <ul class="price-list">{% for price in show.prices.all %}<li><span>{{ price.type }}</span><strong>{{ price.price }} €</strong></li>{% empty %}<li>Tarifs à confirmer.</li>{% endfor %}</ul>
+                    {% if upcoming_representations and show.bookable %}<a class="btn btn-primary w-100" href="#representations">Voir les dates</a>{% elif not show.bookable %}<p class="detail-note mb-0">Les réservations ne sont pas ouvertes.</p>{% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+</article>
 {% endblock %}

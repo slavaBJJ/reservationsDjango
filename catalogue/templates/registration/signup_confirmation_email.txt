@@ -1,0 +1,9 @@
+Bonjour {{ user.first_name }},
+
+Votre compte Scène ouverte a bien été créé.
+
+Votre login est : {{ user.username }}
+
+Vous pouvez maintenant vous connecter et réserver vos prochaines sorties.
+
+L’équipe Scène ouverte

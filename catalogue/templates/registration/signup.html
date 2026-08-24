@@ -1,10 +1,35 @@
 {% extends "layouts/base.html" %}
+{% load static %}
 {% block title %}Inscription{% endblock %}
 {% block content %}
-<h2>Inscription</h2>
-<form method="post" action="{% url 'accounts:user-signup' %}">
-    {% csrf_token %}
-    {{ form }}
-<button type="submit">S'inscrire</button>
-</form>
+<section class="auth-section">
+    <div class="container">
+        <div class="auth-card signup-card mx-auto">
+            <p class="section-kicker">Rejoindre Scène ouverte</p>
+            <h1>Créer un compte</h1>
+            <p class="text-body-secondary">Les champs marqués d’un astérisque sont obligatoires.</p>
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            <form method="post" action="{% url 'accounts:user-signup' %}" data-signup-form data-availability-url="{% url 'accounts:signup-availability' %}">
+                {% csrf_token %}
+                <div class="signup-grid">
+                    {% for field in form %}
+                        <div class="signup-field {% if field.name == 'username' or field.name == 'email' %}signup-field-checkable{% endif %}">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                            {{ field }}
+                            {% if field.help_text %}<span class="helptext">{{ field.help_text|safe }}</span>{% endif %}
+                            {% if field.errors %}<div class="field-errors">{{ field.errors }}</div>{% endif %}
+                            {% if field.name == 'username' or field.name == 'email' %}<div class="availability-message" data-availability-message="{{ field.name }}" aria-live="polite"></div>{% endif %}
+                            {% if field.name == 'password1' %}<div class="password-status" data-password-status aria-live="polite">8 caractères minimum, une majuscule et un caractère spécial.</div>{% endif %}
+                            {% if field.name == 'password2' %}<div class="password-status" data-password-match aria-live="polite"></div>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-primary btn-lg w-100 mt-3" type="submit" data-signup-submit disabled>S’inscrire</button>
+                <noscript><p class="alert alert-warning mt-3">JavaScript doit être activé pour vérifier la disponibilité du login et de l’e-mail.</p></noscript>
+            </form>
+            <p class="text-center mt-4 mb-0">Déjà inscrit ? <a href="{% url 'login' %}">Se connecter</a></p>
+        </div>
+    </div>
+</section>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'catalogue/js/signup-validation.js' %}"></script>{% endblock %}

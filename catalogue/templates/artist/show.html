@@ -1,31 +1,6 @@
 {% extends 'layouts/base.html' %}
-
-{% block title %}Fiche d’un artiste{% endblock %}
-
+{% block title %}{{ artist.firstname }} {{ artist.lastname }}{% endblock %}
 {% block content %}
-<h2>
-    {{ artist.firstname }} {{ artist.lastname }}
-</h2>
-
-<h2>Liste des types</h2>
-<ul>
-    {% for artist_type in artist.a_artistTypes.all %}
-        <li>{{ artist_type.type.type }}</li>
-    {% empty %}
-        <li>Aucun type renseigné.</li>
-    {% endfor %}
-</ul>
-
-<div><a href ="{% url 'catalogue:artist-edit' artist.id%}">Modifier</a></div>
-
-<form method="post" action="{% url 'catalogue:artist-delete' artist.id %}"
-      onsubmit="return confirm('Etes-vous sûr de vouloir supprimer ? ')">
-    {%csrf_token%}
-
-    <input type="hidden" name ="_method" value="DELETE">
-
-    <button>Supprimer</button>
-</form>
-
-<nav> <a href="{% url 'catalogue:artist-index' %}">Retour à l'index</a> </nav>
+<section class="resource-detail"><div class="container"><nav class="page-back"><a href="{% url 'catalogue:artist-index' %}">← Tous les artistes</a></nav><div class="resource-profile"><span class="resource-avatar large">{{ artist.firstname|first|upper }}{{ artist.lastname|first|upper }}</span><div><p class="section-kicker">Artiste</p><h1>{{ artist.firstname }} {{ artist.lastname }}</h1><div class="tag-list">{% for artist_type in artist.a_artistTypes.all %}<span>{{ artist_type.type.type }}</span>{% empty %}<span>Type non renseigné</span>{% endfor %}</div></div></div></div></section>
+<section class="py-5"><div class="container"><div class="resource-actions"><a class="btn btn-primary" href="{% url 'catalogue:artist-edit' artist.id %}">Modifier l’artiste</a><form method="post" action="{% url 'catalogue:artist-delete' artist.id %}" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet artiste ?')">{% csrf_token %}<input type="hidden" name="_method" value="DELETE"><button class="btn btn-outline-danger" type="submit">Supprimer</button></form></div></div></section>
 {% endblock %}

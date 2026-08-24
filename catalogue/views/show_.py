@@ -1,7 +1,8 @@
 from django.core.paginator import Paginator
 from django.db.models import Min, Q
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from catalogue.models import Location, Show
 from catalogue.review_rules import can_review_show
@@ -54,10 +55,14 @@ def index(request):
 
 
 def show(request, show_id):
-    try:
-        show = Show.objects.get(id=show_id)
-    except Show.DoesNotExist:
-        raise Http404('Spectacle inexistant')
+    show = get_object_or_404(
+        Show.objects.select_related('location').prefetch_related(
+            'prices',
+            'artistTypeShows__artist_type__artist',
+            'artistTypeShows__artist_type__type',
+        ),
+        id=show_id,
+    )
 
     title = "Fiche d'un spectacle"
     reviews = show.reviews.filter(
@@ -80,4 +85,7 @@ def show(request, show_id):
         'user_review': user_review,
         'user_can_review': user_can_review,
         'press_reviews': press_reviews,
+        'upcoming_representations': show.representations.filter(
+            schedule__gt=timezone.now(),
+        ).select_related('location').order_by('schedule'),
     })

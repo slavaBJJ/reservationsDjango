@@ -46,6 +46,14 @@ class UserSignUpForm(UserCreationForm):
             'langue',
             ]
 
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                'Cette adresse e-mail est déjà associée à un compte.'
+            )
+        return email
+
     def save(self, commit=True):
         user = super(UserSignUpForm, self).save(commit=False)
         user.save()

@@ -1,15 +1,5 @@
-{%extends 'layouts/base.html' %}
-{% block title %} Modifier un artiste {% endblock %}
+{% extends 'layouts/base.html' %}
+{% block title %}Modifier {{ artist.firstname }} {{ artist.lastname }}{% endblock %}
 {% block content %}
-<h2>Modifier un artiste</h2>
-<form action ="{% url 'catalogue:artist-edit' artist.id %}" method="post">
-    {%csrf_token%}
-    <input type="hidden" name="_method" value="PUT">
-
-    {{form}}
-
-    <button>Modifier</button>
-    <a href = "{ % url 'catalogue:artist-show' artist.id %}">Annuler</a>
-</form>
-<nav><a href="{% url 'catalogue:artist-index' %}">Retour à l'index</a></nav>
+<section class="auth-section"><div class="container"><div class="auth-card mx-auto"><p class="section-kicker">Catalogue des artistes</p><h1>Modifier l’artiste</h1><form action="{% url 'catalogue:artist-edit' artist.id %}" method="post">{% csrf_token %}<input type="hidden" name="_method" value="PUT">{{ form.as_p }}<div class="d-flex gap-3"><button class="btn btn-primary flex-grow-1" type="submit">Enregistrer</button><a class="btn btn-outline-secondary" href="{% url 'catalogue:artist-show' artist.id %}">Annuler</a></div></form></div></div></section>
 {% endblock %}
