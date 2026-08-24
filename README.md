@@ -127,6 +127,8 @@ uniquement dans le terminal. Ce mot de passe ne doit pas être ajouté au dépô
 
 ## Déploiement sur Render
 
+URL de production : [https://reservations-django.onrender.com](https://reservations-django.onrender.com)
+
 Le dépôt contient un Blueprint `render.yaml` qui crée un service web Django et
 une base PostgreSQL. Le script `build.sh` installe les dépendances, rassemble les
 fichiers statiques et applique les migrations à chaque déploiement.
