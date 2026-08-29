@@ -64,11 +64,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         demo_data_allowed = os.getenv('ALLOW_DEMO_DATA') == 'True'
 
-    if not settings.DEBUG and not demo_data_allowed:
-        raise CommandError(
-            'Commande refusée : définissez ALLOW_DEMO_DATA=True '
-            'pour autoriser les données de démonstration.'
-        )
+        if not settings.DEBUG and not demo_data_allowed:
+            raise CommandError(
+                'Commande refusée : définissez ALLOW_DEMO_DATA=True '
+                'pour autoriser les données de démonstration.'
+            )
 
         User = get_user_model()
         groups = {
