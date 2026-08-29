@@ -1,3 +1,5 @@
+
+import os
 import secrets
 import string
 
@@ -60,11 +62,13 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        if not settings.DEBUG:
-            raise CommandError(
-                'Commande refusée : les comptes de démonstration sont réservés '
-                'à un environnement avec DJANGO_DEBUG=True.'
-            )
+        demo_data_allowed = os.getenv('ALLOW_DEMO_DATA') == 'True'
+
+    if not settings.DEBUG and not demo_data_allowed:
+        raise CommandError(
+            'Commande refusée : définissez ALLOW_DEMO_DATA=True '
+            'pour autoriser les données de démonstration.'
+        )
 
         User = get_user_model()
         groups = {
