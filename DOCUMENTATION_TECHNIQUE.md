@@ -2,9 +2,9 @@
 
 **Unité d’enseignement :** Projet d’intégration et de développement<br>
 **Établissement :** Institut des Carrières Commerciales - Ville de Bruxelles<br>
-**Auteurs :** Lisa Veaceslav<br>
+**Auteur :** Lisa Veaceslav<br>
 **Année académique :** 2025-2026<br>
-**Dernière mise à jour :** 24 août 2026
+**Dernière mise à jour :** 31 août 2026
 
 ## 1. Présentation du projet
 
@@ -40,10 +40,21 @@ Le projet suit l’architecture MVT de Django :
 - JavaScript et `fetch` assurent les traitements AJAX ;
 - Django REST Framework sérialise les ressources JSON de l’API.
 
-Le développement a été découpé en branches fonctionnelles : mapping, catalogue,
+### 2.1 Gestion du projet
+
+J'ai organisé le développement par fonctionnalités : mapping, catalogue,
 réservations, avis, rôles métier, CSV, RSS, critiques de presse, API et interface
-graphique. Les fonctionnalités intégrées et validées sont regroupées dans
-`main`, qui constitue la branche de livraison et de déploiement Render.
+graphique. J'ai développé chaque évolution sur une branche Git dédiée. J'ai
+utilisé des messages de commit courts, avec des préfixes comme `feat`, `fix`,
+`docs` ou `merge` pour indiquer la nature du changement.
+
+Avant chaque fusion, j'ai vérifié le fonctionnement de la fonctionnalité, les
+permissions concernées et les principaux risques de régression. J'ai ensuite
+fusionné les changements validés dans `main`, qui constitue la branche de
+livraison et de déploiement Render. J'ai utilisé GitHub pour centraliser le code
+et conserver l'historique des modifications. J'ai effectué le suivi par lots
+fonctionnels, avec une vérification manuelle et des tests Django pour les règles
+métier sensibles.
 
 ## 3. Environnement technique
 
@@ -63,9 +74,11 @@ graphique. Les fonctionnalités intégrées et validées sont regroupées dans
 | Git/GitHub | Versioning et dépôt distant |
 | Render | Hébergement du service web et de PostgreSQL |
 
-Les outils de développement utilisés sont un éditeur compatible Python, Git,
-un terminal, les outils de développement du navigateur et PostgreSQL. Le site
-peut être contrôlé avec Firefox, Chrome, Safari ou un navigateur équivalent.
+Pour le développement, j'ai principalement utilisé PyCharm, le terminal macOS,
+Git, GitHub et PostgreSQL 16. J'ai contrôlé l'interface et les requêtes réseau
+avec Google Chrome et Firefox, notamment à l'aide de leurs outils de
+développement. J'ai utilisé Microsoft Word pour la mise en page et l'export de
+cette documentation.
 
 ## 4. Architecture du dépôt
 
@@ -265,6 +278,11 @@ La commande `python manage.py create_demo_accounts` crée ou actualise ces
 comptes. Elle refuse de s’exécuter lorsque `DEBUG=False`, afin d’empêcher leur
 installation accidentelle en production.
 
+Lors de la première exécution, le mot de passe temporaire de `demo_admin` est
+affiché dans le terminal. Je le conserve pour l'évaluation et je le transmets
+séparément de la documentation. Si nécessaire, je peux créer un nouvel
+administrateur avec `python manage.py createsuperuser`.
+
 ## 10. API consommée
 
 Aucun service web tiers n’est actuellement consommé par l’application. Cette
@@ -334,21 +352,51 @@ Les opérations sont réservées au personnel :
 - PostgreSQL ;
 - Git.
 
-### 14.2 macOS ou Linux
+### 14.2 Installation à partir de l'archive
+
+Après avoir téléchargé l'archive remise avec le projet, je l'extrais puis
+j'ouvre un terminal dans le dossier obtenu. Le nom exact de l'archive peut
+varier :
 
 ```bash
-git clone https://github.com/slavaBJJ/reservationsDjango.git
+unzip reservationsDjango.zip
 cd reservationsDjango
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 cp .env.example .env
+```
+
+Je crée ensuite une base et un utilisateur PostgreSQL. Les valeurs peuvent être
+adaptées, mais elles doivent correspondre à celles du fichier `.env` :
+
+```sql
+CREATE USER reservations_user WITH PASSWORD 'mot-de-passe-local';
+CREATE DATABASE reservations OWNER reservations_user;
+```
+
+Dans `.env`, je renseigne au minimum :
+
+```dotenv
+DJANGO_SECRET_KEY=une-cle-locale-longue-et-aleatoire
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+POSTGRES_DB=reservations
+POSTGRES_USER=reservations_user
+POSTGRES_PASSWORD=mot-de-passe-local
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+```
+
+J'initialise enfin l'application et je démarre le serveur :
+
+```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-Avant `migrate`, créer la base PostgreSQL locale et renseigner `.env` à partir
-de `.env.example`. Ne jamais versionner les véritables secrets.
+Le site est alors disponible à l'adresse <http://127.0.0.1:8000/>. Le fichier
+`.env` contient des secrets locaux et ne doit jamais être ajouté au dépôt.
 
 Pour charger les données de démonstration en environnement local :
 
@@ -432,8 +480,8 @@ les rôles, le CSV, le RSS, l’administration et l’API JWT.
 - configurer un serveur SMTP pour les e-mails de production ;
 - ajouter un paiement en ligne si le périmètre est étendu ;
 - mettre en place sauvegardes, supervision et rotation des secrets ;
-- compléter et stabiliser la suite de tests automatisés ;
-- retirer définitivement l’environnement virtuel de l’historique Git ;
+- augmenter la couverture des tests et automatiser leur exécution avec une
+  intégration continue GitHub Actions ;
 - passer PostgreSQL à une offre durable avant l’expiration de l’instance gratuite.
 
 ## Conclusion
