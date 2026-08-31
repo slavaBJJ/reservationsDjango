@@ -440,6 +440,4 @@ les rôles, le CSV, le RSS, l’administration et l’API JWT.
 
 Le projet couvre le catalogue, les comptes, les réservations, les avis, les
 rôles métier, la modération, le CSV, le RSS, l’administration et une API REST
-authentifiée. Il est déployé sur Render depuis la branche `main`. Les principales
-extensions encore identifiées sont la consommation d’une API tierce, les
-statistiques producteur et la configuration d’un service d’e-mail de production.
+authentifiée. Il est déployé sur Render depuis la branche `main`.
