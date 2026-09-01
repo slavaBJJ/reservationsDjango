@@ -1,0 +1,43 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Catégories {% endblock %}
+{% block content %}
+
+<section class ="container py-5">
+    <h1>Catégories de spectacles</h1>
+
+    {% for category in categories %}
+
+     <article class ="card my-4">
+         <div class = "card-body">
+             <h2>
+                 <a href="{% url 'catalogue:category-show' category.slug %}">
+                 {{ category.name }}
+                 </a>
+             </h2>
+
+             {% if category.description %}
+                <p>{{category.description}}</p>
+             {% endif %}
+
+             <h3>Spectacles</h3>
+
+             <ul>
+                 {% for show in category.shows.all %}
+                    <li>
+                        <a href="{% url 'catalogue:show-show' show.id %}">
+                            {{show.title}}
+                        </a>
+                    </li>
+                 {% empty %}
+                    <li>Aucun spectacle dans cette catégorie.</li>
+                 {% endfor %}
+             </ul>
+         </div>
+     </article>
+    {% empty %}
+    <p>Aucune catégorie disponible.</p>
+    {% endfor %}
+
+</section>
+{% endblock %}

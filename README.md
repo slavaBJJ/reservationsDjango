@@ -3,6 +3,43 @@
 Application Django de gestion et de réservation de spectacles, accompagnée
 d'une API REST HATEOAS sécurisée.
 
+## Installation locale sur Windows
+
+Prérequis : Git et Python 3.12. Aucun serveur PostgreSQL ni fichier `.env` n'est
+nécessaire pour la démonstration locale : le projet utilise alors SQLite dans
+`db.sqlite3` et une clé Django de développement non sécurisée.
+
+Dans PowerShell :
+
+```powershell
+git clone https://github.com/slavaBJJ/reservationsDjango.git
+cd reservationsDjango
+git switch categorie_prépa_exam
+py -3.12 -m venv .venv
+.venv\Scripts\python.exe -m pip install --upgrade pip
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe manage.py migrate
+.venv\Scripts\python.exe manage.py create_demo_accounts
+.venv\Scripts\python.exe manage.py check
+.venv\Scripts\python.exe manage.py runserver
+```
+
+Le site est ensuite disponible sur <http://127.0.0.1:8000/>. La commande
+`create_demo_accounts` appelle déjà `seed_demo_catalogue` : il ne faut donc pas
+lancer les deux commandes lors d'une installation normale. Pour créer seulement
+le catalogue, sans les comptes, utiliser :
+
+```powershell
+.venv\Scripts\python.exe manage.py seed_demo_catalogue
+```
+
+### PostgreSQL local facultatif
+
+Pour utiliser PostgreSQL à la place de SQLite, copier `.env.example` vers `.env`,
+décommenter `DJANGO_DATABASE=postgresql` et les variables `POSTGRES_*`, puis
+renseigner les identifiants de la base locale. `DATABASE_URL` reste prioritaire
+lorsqu'elle est définie, notamment sur Render.
+
 ## Documentation API
 
 Après avoir lancé le serveur :

@@ -1,0 +1,29 @@
+[
+{
+  "model": "catalogue.category",
+  "pk": 1,
+  "fields": {
+    "name": "Comédie",
+    "slug": "comedie",
+    "description": "Spectacles humoristiques et comiques."
+  }
+},
+{
+  "model": "catalogue.category",
+  "pk": 2,
+  "fields": {
+    "name": "Théâtre",
+    "slug": "theatre",
+    "description": "Pièces de théâtre et créations scéniques."
+  }
+},
+{
+  "model": "catalogue.category",
+  "pk": 3,
+  "fields": {
+    "name": "Non classé",
+    "slug": "non-classe",
+    "description": "Categorie attribuée par défaut."
+  }
+}
+]

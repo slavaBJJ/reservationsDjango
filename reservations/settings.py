@@ -15,6 +15,7 @@ from pathlib import Path
 
 import dj_database_url
 from django.conf.global_settings import LOGOUT_REDIRECT_URL
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -35,18 +36,30 @@ def env_list(name, default=''):
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+# Render fournit ce nom d'hôte automatiquement. Il permet de distinguer
+# l'hébergement de production d'un lancement local sans fichier .env.
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+IS_RENDER = bool(RENDER_EXTERNAL_HOSTNAME or env_bool('RENDER', False))
+
+# Cette clé de secours sert uniquement à faciliter un démarrage local. Elle est
+# volontairement publique et ne doit jamais être utilisée sur Render.
+LOCAL_DEVELOPMENT_SECRET_KEY = 'django-insecure-local-development-only-not-for-production'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if IS_RENDER:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY est obligatoire sur Render.')
+    SECRET_KEY = LOCAL_DEVELOPMENT_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_bool('DJANGO_DEBUG', False)
+DEBUG = env_bool('DJANGO_DEBUG', not IS_RENDER)
+if IS_RENDER and DEBUG:
+    raise ImproperlyConfigured('DJANGO_DEBUG doit rester False sur Render.')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 # Render fournit automatiquement le nom public du service. L'ajouter ici évite
 # de devoir connaître l'URL ``onrender.com`` avant le premier déploiement.
-RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     if RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
@@ -122,24 +135,39 @@ WSGI_APPLICATION = 'reservations.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'reservations'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
-    }
-}
+DATABASE_URL = os.getenv('DATABASE_URL')
+POSTGRES_REQUESTED = os.getenv('DJANGO_DATABASE', '').lower() in {
+    'postgres', 'postgresql',
+} or any(os.getenv(name) for name in (
+    'POSTGRES_DB', 'POSTGRES_USER', 'POSTGRES_PASSWORD', 'POSTGRES_HOST',
+))
 
-# Render expose sa base PostgreSQL sous la forme d'une URL unique. Les variables
-# POSTGRES_* ci-dessus continuent d'être utilisées en développement local.
-if os.getenv('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif POSTGRES_REQUESTED:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'reservations'),
+            'USER': os.getenv('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', '127.0.0.1'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

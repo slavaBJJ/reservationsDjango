@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from catalogue.models import (
     Artist,
+    Category,
     Locality,
     Location,
     PressReview,
@@ -30,6 +31,34 @@ from catalogue.roles import (
     is_producer_for,
 )
 from accounts.forms import UserSignUpForm
+
+
+class CategoryViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.category = Category.objects.create(
+            name='Théâtre', slug='theatre', description='Pièces de théâtre.',
+        )
+        cls.show = Show.objects.create(
+            slug='piece-test', title='Pièce test', created_in=2026,
+            category=cls.category,
+        )
+
+    def test_category_list_displays_related_shows(self):
+        response = self.client.get(reverse('catalogue:category-index'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.category.name)
+        self.assertContains(response, self.show.title)
+
+    def test_category_detail_displays_related_shows(self):
+        response = self.client.get(
+            reverse('catalogue:category-show', args=[self.category.slug]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.category.description)
+        self.assertContains(response, self.show.title)
 
 
 class ArtistCrudPermissionTests(TestCase):
@@ -249,6 +278,16 @@ class ShowCatalogueTests(TestCase):
         self.assertEqual(response.context['shows'][0].title, 'Spectacle 00')
 
     def test_search_and_filters_can_be_combined(self):
+        price = Price.objects.create(type='Réservable', price='20.00')
+        future_schedule = timezone.now() + timedelta(days=1)
+        for show in Show.objects.filter(bookable=True):
+            show.prices.add(price)
+            Representation.objects.create(
+                show=show,
+                location=self.location,
+                schedule=future_schedule,
+            )
+
         response = self.client.get(reverse('catalogue:show-index'), {
             'q': 'Spectacle 0',
             'location': self.location.pk,
