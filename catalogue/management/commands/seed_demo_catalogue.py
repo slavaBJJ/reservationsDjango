@@ -6,6 +6,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from catalogue.models import (
+    Category,
     Locality,
     Location,
     Price,
@@ -25,6 +26,17 @@ DEMO_SHOWS = (
     ('les-voix-du-temps', 'Les Voix du temps', 70, 47),
     ('voyage-imaginaire', 'Le Voyage imaginaire', 110, 54),
 )
+
+DEMO_CATEGORIES = (
+    ('comedie', 'Comédie', 'Spectacles humoristiques et comiques.'),
+    ('theatre', 'Théâtre', 'Pièces de théâtre et créations scéniques.'),
+    ('non-classe', 'Non classé', 'Catégorie attribuée par défaut.'),
+)
+
+DEMO_CATEGORY_BY_SHOW = {
+    'rire-en-scene': 'comedie',
+    'le-secret-du-rideau': 'theatre',
+}
 
 
 class Command(BaseCommand):
@@ -74,6 +86,14 @@ class Command(BaseCommand):
             },
         )
 
+        categories = {
+            slug: Category.objects.update_or_create(
+                slug=slug,
+                defaults={'name': name, 'description': description},
+            )[0]
+            for slug, name, description in DEMO_CATEGORIES
+        }
+
         now = timezone.now()
         created_count = 0
         for index, (slug, title, duration, future_days) in enumerate(DEMO_SHOWS):
@@ -89,6 +109,9 @@ class Command(BaseCommand):
                     'created_in': now.year,
                     'location': location,
                     'bookable': True,
+                    'category': categories[
+                        DEMO_CATEGORY_BY_SHOW.get(slug, 'non-classe')
+                    ],
                 },
             )
             created_count += int(created)

@@ -8,7 +8,7 @@ class ShowForm(forms.ModelForm):
         model = Show
         fields = [
             'slug', 'title', 'description', 'poster_url', 'duration',
-            'created_in', 'location', 'bookable', 'prices',
+            'created_in', 'location', 'category', 'bookable', 'prices',
         ]
         labels = {
             'slug': 'Identifiant URL',
@@ -18,6 +18,7 @@ class ShowForm(forms.ModelForm):
             'duration': 'Durée (minutes)',
             'created_in': 'Année de création',
             'location': 'Lieu de création',
+            'category': 'Catégorie',
             'bookable': 'Réservations ouvertes',
             'prices': 'Tarifs disponibles',
         }

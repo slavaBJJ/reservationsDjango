@@ -1,0 +1,28 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <h1>{{ category.name }}</h1>
+
+    {% if category.description %}
+        <p>{{ category.description }}</p>
+    {% endif %}
+
+    <h2>Spectacles</h2>
+    <ul>
+        {% for show in category.shows.all %}
+            <li>
+                <a href="{% url 'catalogue:show-show' show.id %}">
+                    {{ show.title }}
+                </a>
+            </li>
+        {% empty %}
+            <li>Aucun spectacle dans cette catégorie.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'catalogue:category-index' %}">Retour aux catégories</a>
+</section>
+{% endblock %}

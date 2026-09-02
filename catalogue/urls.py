@@ -140,5 +140,12 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token-obtain-pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
 
+    path('category/', views.category.index, name='category-index'),
+    path(
+        'category/<slug:category_slug>/',
+        views.category.show,
+        name='category-show',
+    ),
+
 
 ]

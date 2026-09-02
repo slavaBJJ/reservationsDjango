@@ -3,6 +3,24 @@
 from django.db import migrations, models
 
 
+def created_in_datetime_to_year(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        schema_editor.execute(
+            'ALTER TABLE "shows" '
+            'ALTER COLUMN "created_in" TYPE smallint '
+            'USING EXTRACT(YEAR FROM "created_in")::smallint'
+        )
+
+
+def created_in_year_to_datetime(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        schema_editor.execute(
+            'ALTER TABLE "shows" '
+            'ALTER COLUMN "created_in" TYPE timestamp with time zone '
+            "USING make_timestamptz(\"created_in\", 1, 1, 0, 0, 0, 'UTC')"
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,17 +30,9 @@ class Migration(migrations.Migration):
     operations = [
         migrations.SeparateDatabaseAndState(
             database_operations=[
-                migrations.RunSQL(
-                    sql=(
-                        'ALTER TABLE "shows" '
-                        'ALTER COLUMN "created_in" TYPE smallint '
-                        'USING EXTRACT(YEAR FROM "created_in")::smallint'
-                    ),
-                    reverse_sql=(
-                        'ALTER TABLE "shows" '
-                        'ALTER COLUMN "created_in" TYPE timestamp with time zone '
-                        "USING make_timestamptz(\"created_in\", 1, 1, 0, 0, 0, 'UTC')"
-                    ),
+                migrations.RunPython(
+                    created_in_datetime_to_year,
+                    created_in_year_to_datetime,
                 ),
             ],
             state_operations=[

@@ -35,8 +35,13 @@ class Show(models.Model):
         related_name='produced_shows',
         blank=True,
     )
-
     objects = ShowManager()
+
+    category = models.ForeignKey('Category',
+                                 on_delete=models.PROTECT,
+                                 related_name='shows',
+                                 null=True,
+                                 blank=True,)
 
     def __str__(self):
         return self.title
